@@ -13,7 +13,7 @@
 #include "eq.h"
 
 namespace {
-constexpr size_t kConfigSize = 102;
+constexpr size_t kConfigSize = 104;
 constexpr size_t kBins = 128;
 int64_t monotonicNanos() {
     timespec t{};
@@ -193,10 +193,14 @@ Java_dev_rusteq_audio_NativeEngine_load(JNIEnv *env, jobject object, jstring pat
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_dev_rusteq_audio_NativeEngine_configure(JNIEnv *env, jobject object, jfloatArray values) {
-    if (!values || env->GetArrayLength(values) != static_cast<jsize>(kConfigSize)) return JNI_FALSE;
+    if (!values) return JNI_FALSE;
+    const jsize count = env->GetArrayLength(values);
+    if (count != 102 && count != static_cast<jsize>(kConfigSize)) return JNI_FALSE;
     std::lock_guard<std::mutex> guard(controlMutex);
     auto &bridge = bridges[ownerId(env, object)]; auto &session = bridge.session;
-    env->GetFloatArrayRegion(values, 0, kConfigSize, bridge.cachedConfig.data());
+    bridge.cachedConfig.fill(0.0f);
+    bridge.cachedConfig[103] = 110.0f;
+    env->GetFloatArrayRegion(values, 0, count, bridge.cachedConfig.data());
     if (env->ExceptionCheck()) return JNI_FALSE;
     bridge.haveConfig = true;
     if (!session || !session->callback || !session->callback->handle) return JNI_TRUE;

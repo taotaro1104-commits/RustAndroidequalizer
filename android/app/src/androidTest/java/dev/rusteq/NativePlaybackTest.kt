@@ -3,6 +3,7 @@ package dev.rusteq
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.rusteq.audio.EqConfig
 import dev.rusteq.audio.NativeEngine
+import dev.rusteq.audio.responseDb
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -32,6 +33,28 @@ class NativePlaybackTest {
             assertNotNull("CSV worker must publish a report: ${app.player.state.value.message}", app.player.state.value.optimizationReport)
             assertEquals(5, app.player.state.value.config.bands.size)
         } finally { instrument.runOnMainSync { app.player.configure { original } }; file.delete() }
+    }
+
+    @Test fun builtinPresetsAndBassSettingsAreValidAndBackwardCompatible() {
+        val presets = dev.rusteq.audio.BuiltinPresets.all
+        assertEquals(16, presets.size)
+        assertEquals(presets.size, presets.map { it.id }.toSet().size)
+        for (preset in presets) {
+            val config = preset.config
+            assertEquals(10, config.bands.size)
+            assertEquals(config, EqConfig.fromJson(config.toJson()))
+            assertTrue(config.preamp.isFinite() && config.preamp <= -6f)
+            for (i in 0..128) assertTrue(config.responseDb(20f*kotlin.math.exp(kotlin.math.ln(1000f)*i/128f),48000f) <= -1.8f)
+            assertTrue(nativeEngine.configure(config.packed()))
+        }
+        val woofer = dev.rusteq.audio.BuiltinPresets.find("woofer")!!.config
+        assertTrue(woofer.virtualBassAmount > 0f)
+        assertEquals(woofer, EqConfig.fromJson(woofer.toJson()))
+        assertTrue(nativeEngine.configure(woofer.packed().copyOf(102)))
+        assertFalse(nativeEngine.configure(FloatArray(103)))
+        val legacy = org.json.JSONObject(woofer.toJson()).put("version",1).apply { remove("virtualBassAmount"); remove("virtualBassHz") }
+        assertEquals(0f,EqConfig.fromJson(legacy.toString()).virtualBassAmount,0f)
+        assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(woofer.toJson()).put("virtualBassAmount",2).toString()) }.isFailure)
     }
 
     @Test fun demoUsesNativeCallbackAndPausePreservesPosition() {
@@ -68,7 +91,7 @@ class NativePlaybackTest {
         assertEquals(2, config.bands.size)
         assertEquals(-5.5f, config.preamp, 0f)
         assertEquals(config, EqConfig.fromJson(config.toJson()))
-        assertEquals(102, config.packed().size)
+        assertEquals(104, config.packed().size)
         val single = EqConfig.fromAutoEq("Filter 1: ON PK Fc 100 Hz Gain -3 dB Q 1")
         val reset = single.copy(bands = EqConfig.defaultBands(single.bands.size))
         assertTrue(reset.bands.single().hz.isFinite())

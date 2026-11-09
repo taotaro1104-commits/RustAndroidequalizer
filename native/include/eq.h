@@ -21,6 +21,9 @@ typedef struct EqStats {
 EqHandle *eq_create(uint32_t sample_rate);
 void eq_destroy(EqHandle *handle);
 void eq_process(EqHandle *handle, float *output, uint32_t frames);
+// Packed configuration: 102 legacy floats or 104 floats. Prefix unchanged.
+// [102] virtual bass amount 0..1, [103] extraction Hz 60..180.
+// Legacy callers default to bass off / 110 Hz. Control thread only.
 bool eq_configure(EqHandle *handle, const float *values, uint32_t count);
 bool eq_load(EqHandle *handle, const char *path);
 bool eq_load_at(EqHandle *handle, const char *path, double seconds);

@@ -9,10 +9,11 @@
 | JNI / I/O | `native/oboe_bridge.cpp` | control 専用 JNI、Oboe callback、AAudio stream 管理 |
 | FFI | `rust/crates/ffi-android` | opaque handle と C ABI、所有権境界 |
 | Engine | `rust/crates/engine` | decode worker、SPSC queue、render、メトリクス |
-| DSP | `rust/crates/dsp-core` | RBJ peaking DF1、compressor、limiter、wide、crossfeed |
+| DSP | `rust/crates/dsp-core` | RBJ peaking DF1、疑似BASS、compressor、limiter、wide、crossfeed |
 | SRC | `rust/crates/dsp-resample` | Rubato FFT SRC、初期遅延除去と末尾補正 |
 | Spatial | `rust/crates/dsp-spatial` | stereo matrix partitioned convolution、SOFA filter 抽出、per-ear delay、IR 合成 |
 | AutoEQ | `rust/crates/autoeq` | CSV 検証、対数補間、独立した PEQ 最適化、headroom 計算 |
+| Desktop I/O | rust/crates/audio-cpal | 任意featureのCPAL native-rate出力、同じengine / DSP |
 | 外部 session | `SystemEqService.kt`, `SessionEqualizers.kt` | 非ゼロ session の platform EQ、制御権・近似範囲の表示、停止時の解放 |
 
 Oboe C++ との境界が中心になるため、設計書で比較した **C ABI + 小さな C++ JNI shim** を採用しています。ヘッダー `native/include/eq.h` と Rust の ABI は対になっています。control メソッド数が少ないため binding generator は必須依存にしていません。
@@ -52,7 +53,7 @@ MediaSession の通知は Android の通知権限の適用除外です。通常�
 1. 実際の SOFA dataset と複数端末での聴感・性能・電池評価。任意 dataset の再配布権は自動判定しません。
 2. head tracking、複数移動音源、長い IR、FFT partition / latency / thermal の実機評価。
 3. 公式 AutoEq solver との比較評価、別 target / solver、任意測定値での品質検証。現実装は独立した bounded optimizer です。
-4. CPAL の desktop I/O backend、gapless queue transitions、アルバムアート、再生状態の詳細なプロセス復元。
+4. gapless queue transitions、アルバムアート、再生状態の詳細なプロセス復元。CPAL desktopは実装済み（Android埋め込みbackendは未対応）。
 5. low / medium / flagship、USB DAC / wired / Bluetooth / speaker の QA、ABX、Perfetto、CPU / memory / battery の測定。
 6. AudioPlaybackCapture と global / root system-wide は別 feasibility track とする。非rootの協調 session 連携は [実装済みの経路](external-eq.md) です。
 

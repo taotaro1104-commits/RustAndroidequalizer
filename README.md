@@ -10,6 +10,7 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 - Symphonia による MP3、WAV、FLAC、Ogg Vorbis、AAC-LC / M4A、ALAC、AIFF のデコード（mono / stereo、DRM なし）。実際の対応可否はコンテナとコーデックの組み合わせによります。
 - 10 / 31 バンド PEQ、Hz / gain / Q 調整、対数周波数グラフとドラッグ操作、preamp、bypass。
 - ステレオ連動 compressor、sample-peak limiter、M/S widener、低域 crossfeed。
+- 16種類の標準プリセットと、倍音生成による疑似BASS / ウーファー。量・対象帯域を調整し、JSONに保存できます（[設定と仕組み](docs/presets-bass.md)）。
 - 設定更新時の 20 ms クロスフェード。係数計算は control thread、処理は可変フレーム数対応。
 - プリセットの端末内保存・復元・削除、JSON 書き出し、AutoEQ が生成した **PK フィルター設定テキスト**と独自 JSON のインポート。
 - 測定 / target CSV から 5 / 10 バンドの PEQ と preamp を生成する独立した AutoEQ 最適化器。worker 上で計算し、形状 RMSE を表示（[形式とアルゴリズム](docs/autoeq.md)）。
@@ -72,7 +73,7 @@ cargo run --release -p dsp-spatial --example benchmark
 ```text
 Compose → JNI control → coefficient preparation → bounded SPSC config queue
 SAF file → app cache → Rust decode / Rubato worker → bounded SPSC PCM queue
-Oboe callback → Rust renderer → preamp → PEQ → compressor → stereo processing
+Oboe callback → Rust renderer → preamp → PEQ → virtual bass → compressor → stereo processing
                → prepared HRTF/reverb convolution → final limiter → output
 ```
 
@@ -80,7 +81,7 @@ JNI はソースを開く・設定する・再生制御・メトリクス取得�
 
 ## 現在の範囲と制限
 
-0.3.0 は **PEQ / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対応する外部セッションへの EQ** を実装しています。CPAL backend、AudioPlaybackCapture、全アプリの出力を処理する global / root 方式は未実装です。
+0.4.0 は **PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対応する外部セッションへの EQ** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
 
 - 録音権限・ストレージ全体の読み取り権限・インターネット権限は要求しません。ファイルは Android の選択画面で指定します。
 - バックグラウンド再生には `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK` / `WAKE_LOCK` を使用します。MediaSession の通知のみを投稿します。
@@ -93,9 +94,11 @@ JNI はソースを開く・設定する・再生制御・メトリクス取得�
 - callback p99 が period の 50% を継続して超えると品質を下げます。Eco でも period を継続して超える場合は HRTF / reverb を停止して通知します。実機の deadline 保証ではありません。
 - HRTF / IR ファイルと選択状態はセッション内で扱います。EQ プリセット・JSON に外部データは含めません。アプリプロセス終了後の曲再開はユーザーの再生操作が必要です。
 - limiter は lookahead なしの sample-peak 型です。true-peak 保証は行いません。bypass でも NaN 除去と ±0.999 の最終安全クリップは残ります。
-- response graph は PEQ + preamp の静的応答であり、compressor / limiter / spatial の応答は含みません。
+- response graph は PEQ + preamp の静的応答であり、疑似BASS / compressor / limiter / spatial の応答は含みません。
 - p95 / p99 は直近の native callback の処理時間を 100 µs 刻みで集計します。最終 bin は `≥12.8 ms` と表示します。厳密な deadline 判定には Perfetto を併用してください。
 - DSP の締め切りは実際の **`numFrames / sampleRate`** に従います。10 ms は固定の猶予ではありません。実機での性能・熱・電池・聴感・30 分 xrun gate は別途 QA が必要です。
+
+[CPALのdesktop再生手順](docs/desktop.md)も参照してください。
 
 構成の詳細と残作業は [docs/architecture.md](docs/architecture.md) を参照してください。
 

@@ -28,7 +28,10 @@ fn callback_allocates_and_frees_nothing_even_during_updates() {
     let (mut control, mut renderer) = engine::create(48000);
     let mut output = [0.0; 512];
     control.set_playing(true);
-    let mut config = Config::default();
+    let mut config = Config {
+        virtual_bass_amount: 0.75,
+        ..Default::default()
+    };
     for i in 0..40 {
         config.bands[8].gain_db = (i % 12) as f32;
         assert!(control.configure(&config));

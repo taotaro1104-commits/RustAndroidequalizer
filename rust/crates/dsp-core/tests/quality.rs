@@ -22,6 +22,7 @@ fn render(block: usize) -> Vec<f32> {
     let mut config = Config {
         preamp_db: 0.0,
         compressor: true,
+        virtual_bass_amount: 0.75,
         spatial: SpatialMode::Crossfeed,
         ..Default::default()
     };
@@ -66,6 +67,7 @@ fn hostile_parameters_and_samples_stay_finite_and_bounded() {
     let mut config = Config {
         preamp_db: 12.0,
         compressor: true,
+        virtual_bass_amount: 0.75,
         spatial: SpatialMode::Wide,
         width: 2.0,
         ..Default::default()

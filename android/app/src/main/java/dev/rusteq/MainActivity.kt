@@ -150,6 +150,7 @@ private fun EqualizerScreen(vm: PlayerController) {
                 listOf("20", "100", "1k", "10k", "20k Hz").forEach { Text(it, fontSize = 10.sp, color = Muted) }
             }
             Text("ノードを選択・ドラッグして調整", color = Muted, fontSize = 11.sp)
+            Text("表示曲線は PEQ とプリアンプの静的応答です。", color = Muted, fontSize = 10.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 listOf(10, 31).forEach { count -> FilterChip(selected = c.bands.size == count, onClick = { vm.bandCount(count) }, label = { Text("$count bands") }) }
                 Spacer(Modifier.weight(1f))
@@ -170,17 +171,13 @@ private fun EqualizerScreen(vm: PlayerController) {
             Text("PRESETS", color = Muted, fontSize = 11.sp, letterSpacing = 2.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {
-                    OutlinedButton(onClick = { presetMenu = true }, modifier = Modifier.fillMaxWidth()) { Text("プリセットを選ぶ") }
+                    OutlinedButton(onClick = { presetMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(state.presetTitle ?: "プリセットを選ぶ", maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     DropdownMenu(expanded = presetMenu, onDismissRequest = { presetMenu = false }) {
-                        listOf("Flat", "Warm", "Vocal").forEach { name ->
-                            DropdownMenuItem(text = { Text(name) }, onClick = {
-                                vm.configure { current -> current.copy(bands = EqConfig.defaultBands(10).map { b ->
-                                    val db = when (name) { "Warm" -> (4.0 * exp(-((ln(b.hz / 100f)).pow(2)) / 2.0)).toFloat()
-                                        "Vocal" -> (3.0 * exp(-((ln(b.hz / 1800f)).pow(2)) / 1.5)).toFloat(); else -> 0f }
-                                    b.copy(db = db)
-                                }) }; vm.select(0); presetMenu = false
-                            })
+                        BuiltinPresets.all.forEach { preset ->
+                            DropdownMenuItem(text = { Column { Text(preset.title); Text(preset.description, color = Muted, fontSize = 10.sp) } },
+                                onClick = { vm.applyBuiltinPreset(preset.id); presetMenu = false })
                         }
+                        if (state.presetNames.isNotEmpty()) HorizontalDivider()
                         state.presetNames.forEach { name -> DropdownMenuItem(text = { Text(name) }, trailingIcon = { TextButton(onClick = { deletePreset = name; presetMenu = false }) { Text("削除", fontSize = 11.sp) } }, onClick = { vm.applyPreset(name); presetMenu = false }) }
                     }
                 }
@@ -196,6 +193,23 @@ private fun EqualizerScreen(vm: PlayerController) {
             }
             OutlinedButton(onClick = { measurementPicker.launch(arrayOf("text/*", "application/octet-stream", "application/vnd.ms-excel")) }, enabled = !state.optimizing) { Text(if (state.optimizing) "補正を計算中…" else "測定 CSV を選んで最適化") }
             state.optimizationReport?.let { Text(it, color = Muted, fontSize = 10.sp) }
+        }
+
+        Panel {
+            Text("VIRTUAL BASS / WOOFER", color = Muted, fontSize = 11.sp, letterSpacing = 2.sp)
+            var rememberedAmount by remember { mutableFloatStateOf(.5f) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) { Text("疑似 BASS"); Text("低音の倍音を加えて、存在感を補います", color = Muted, fontSize = 11.sp) }
+                Switch(c.virtualBassAmount > 0f, { enabled ->
+                    if (!enabled) rememberedAmount = c.virtualBassAmount
+                    vm.configure { it.copy(virtualBassAmount = if (enabled) rememberedAmount.coerceAtLeast(.1f) else 0f) }
+                })
+            }
+            if (c.virtualBassAmount > 0f) {
+                LabeledSlider("強さ", "${(c.virtualBassAmount*100).roundToInt()}%", c.virtualBassAmount, .01f..1f) { v -> vm.configure { it.copy(virtualBassAmount = v) } }
+                LabeledSlider("低音の抽出周波数", "${c.virtualBassHz.roundToInt()} Hz", c.virtualBassHz, 60f..180f) { v -> vm.configure { it.copy(virtualBassHz = v) } }
+            }
+            Text("アプリ内再生向けの倍音処理です。通常の低音ブーストはプリセットから選べます。", color = Muted, fontSize = 10.sp)
         }
 
         Panel {
@@ -302,7 +316,7 @@ private fun ExternalEqPanel() {
             })
         }
         Text("全アプリ共通の EQ は保証されません。有効にした後、対応プレーヤーで曲を開き直してください。Spotify / YouTube などが対応しているとは限りません。", color = Muted, fontSize = 11.sp)
-        Text("PEQ とプリアンプを端末 EQ のバンドへ近似します。コンプレッサー・HRTF・IR は他アプリには適用しません。", color = Muted, fontSize = 11.sp)
+        Text("PEQ とプリアンプを端末 EQ のバンドへ近似します。疑似 BASS・コンプレッサー・HRTF・IR は他アプリには適用しません。", color = Muted, fontSize = 11.sp)
         request?.let { Text("プレーヤーからの接続要求: ${it.second} · session ${it.first}", color = Amber, fontSize = 11.sp) }
         if (state.running && state.sessions.isEmpty()) Text("対応プレーヤーからの接続待ち", color = Accent, fontSize = 12.sp)
         state.sessions.forEach { session -> Text("${session.player}\nSession ${session.id} · ${session.bands} bands · ${session.status}", color = Muted, fontSize = 11.sp) }

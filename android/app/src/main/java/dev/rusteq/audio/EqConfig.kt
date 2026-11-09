@@ -16,18 +16,22 @@ data class EqConfig(
     val spatial: Int = 0,
     val width: Float = 1.3f,
     val crossfeed: Float = .25f,
+    val virtualBassAmount: Float = 0f,
+    val virtualBassHz: Float = 110f,
 ) {
-    fun packed(): FloatArray = FloatArray(102).also { v ->
+    fun packed(): FloatArray = FloatArray(104).also { v ->
         v[0] = preamp; v[1] = if (bypass) 1f else 0f; v[2] = bands.size.toFloat()
         v[3] = if (compressor) 1f else 0f; v[4] = threshold; v[5] = ratio
         v[6] = spatial.toFloat(); v[7] = width; v[8] = crossfeed
+        v[102] = virtualBassAmount; v[103] = virtualBassHz
         bands.forEachIndexed { i, b -> v[9+i*3] = b.hz; v[10+i*3] = b.db; v[11+i*3] = b.q }
     }
 
     fun toJson(): String = JSONObject().apply {
-        put("version", 1); put("preamp", preamp); put("bypass", bypass)
+        put("version", 2); put("preamp", preamp); put("bypass", bypass)
         put("compressor", compressor); put("threshold", threshold); put("ratio", ratio)
         put("spatial", spatial); put("width", width); put("crossfeed", crossfeed)
+        put("virtualBassAmount", virtualBassAmount); put("virtualBassHz", virtualBassHz)
         put("bands", JSONArray().apply { bands.forEach { put(JSONArray(listOf(it.hz, it.db, it.q))) } })
     }.toString()
 
@@ -40,7 +44,7 @@ data class EqConfig(
 
         fun fromJson(text: String): EqConfig {
             val j = JSONObject(text)
-            require(j.getInt("version") == 1) { "未対応のプリセット形式です" }
+            require(j.getInt("version") in 1..2) { "未対応のプリセット形式です" }
             val b = j.getJSONArray("bands")
             require(b.length() in 1..31) { "バンド数は 1〜31 です" }
             fun finite(v: Double, min: Float, max: Float): Float {
@@ -53,6 +57,8 @@ data class EqConfig(
                 compressor = j.optBoolean("compressor", false), threshold = finite(j.optDouble("threshold", -18.0), -60f, 0f),
                 ratio = finite(j.optDouble("ratio", 3.0), 1f, 20f), spatial = j.optInt("spatial", 0).coerceIn(0, 2),
                 width = finite(j.optDouble("width", 1.3), 0f, 2f), crossfeed = finite(j.optDouble("crossfeed", .25), 0f, .5f),
+                virtualBassAmount = finite(j.optDouble("virtualBassAmount", 0.0), 0f, 1f),
+                virtualBassHz = finite(j.optDouble("virtualBassHz", 110.0), 60f, 180f),
             )
         }
 

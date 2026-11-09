@@ -26,6 +26,8 @@ pub struct Config {
     pub spatial: SpatialMode,
     pub width: f32,
     pub crossfeed: f32,
+    pub virtual_bass_amount: f32,
+    pub virtual_bass_hz: f32,
 }
 
 impl Default for Config {
@@ -45,6 +47,8 @@ impl Default for Config {
             spatial: SpatialMode::Off,
             width: 1.3,
             crossfeed: 0.25,
+            virtual_bass_amount: 0.0,
+            virtual_bass_hz: 110.0,
         }
     }
 }

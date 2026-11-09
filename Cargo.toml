@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 exclude = ["vendor/sofar"]
-members = ["rust/crates/dsp-core", "rust/crates/dsp-resample", "rust/crates/dsp-spatial", "rust/crates/engine", "rust/crates/ffi-android", "rust/crates/autoeq"]
+members = ["rust/crates/dsp-core", "rust/crates/dsp-resample", "rust/crates/dsp-spatial", "rust/crates/engine", "rust/crates/ffi-android", "rust/crates/autoeq", "rust/crates/audio-cpal"]
 
 [workspace.package]
 version = "0.1.0"

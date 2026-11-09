@@ -26,6 +26,7 @@ data class PlayerState(
     val preparingEffect: Boolean = false, val effectLatencyMs: Float = 0f,
     val queueSize: Int = 0, val queueIndex: Int = 0,
     val optimizing: Boolean = false, val optimizationReport: String? = null,
+    val presetTitle: String? = null,
 )
 
 class PlayerController(private val app: Application) {
@@ -43,6 +44,7 @@ class PlayerController(private val app: Application) {
     ))
     val state = mutable.asStateFlow()
     private var dirty = true
+    private var presetRevision = 0
     private var lastPath: String? = null
     private var lastWasDemo = true
     private var foreground = true
@@ -108,8 +110,20 @@ class PlayerController(private val app: Application) {
     }
 
     fun configure(change: (EqConfig) -> EqConfig) {
-        mutable.update { it.copy(config = change(it.config)) }; dirty = true
+        presetRevision++
+        mutable.update { it.copy(config = change(it.config), presetTitle = null) }; dirty = true
         preferences.edit().putString("last", mutable.value.config.toJson()).apply()
+    }
+
+    fun applyBuiltinPreset(id: String) {
+        val preset = BuiltinPresets.find(id) ?: return
+        val revision = ++presetRevision
+        viewModelScope.launch {
+            val config = withContext(Dispatchers.Default) { preset.config }
+            if (revision != presetRevision) return@launch
+            configure { config }; select(0)
+            mutable.update { it.copy(presetTitle = preset.title) }
+        }
     }
 
     fun select(index: Int) { mutable.update { it.copy(selected = index.coerceIn(0, it.config.bands.lastIndex)) } }

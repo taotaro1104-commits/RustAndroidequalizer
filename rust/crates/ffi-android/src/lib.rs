@@ -61,14 +61,18 @@ pub unsafe extern "C" fn eq_process(handle: *mut EqHandle, output: *mut f32, fra
 
 /// # Safety
 /// Handle must be live. values points to count readable floats for this call.
-/// The packed configuration has 9 scalar values followed by 31 (Hz, dB, Q) triples.
+/// Prefix: 9 scalars + 31 (Hz, dB, Q) triples. Optional final two scalars
+/// are virtual-bass amount and extraction Hz. Legacy 102-float callers disable it.
 #[no_mangle]
 pub unsafe extern "C" fn eq_configure(
     handle: *mut EqHandle,
     values: *const f32,
     count: u32,
 ) -> bool {
-    if handle.is_null() || values.is_null() || count != (9 + MAX_BANDS * 3) as u32 {
+    if handle.is_null()
+        || values.is_null()
+        || ![(9 + MAX_BANDS * 3) as u32, (11 + MAX_BANDS * 3) as u32].contains(&count)
+    {
         return false;
     }
     let v = std::slice::from_raw_parts(values, count as usize);
@@ -86,6 +90,8 @@ pub unsafe extern "C" fn eq_configure(
         },
         width: v[7],
         crossfeed: v[8],
+        virtual_bass_amount: v.get(102).copied().unwrap_or(0.0),
+        virtual_bass_hz: v.get(103).copied().unwrap_or(110.0),
         bands: std::array::from_fn(|i| Band {
             frequency: v[9 + i * 3],
             gain_db: v[10 + i * 3],

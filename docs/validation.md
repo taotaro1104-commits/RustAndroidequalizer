@@ -1,6 +1,6 @@
 # 実装検証記録
 
-検証日：2026-11-09。
+検証日：2026-11-10。
 
 ## 環境
 
@@ -10,6 +10,20 @@
 - ローカル検証では既設 CMake 4.3.1 を使用。標準設定と CI は SDK CMake 3.22.1。別バージョンは `-PcmakeVersion=...` または未追跡の `android/local.properties` の `cmake.version` で指定可能。
 - 接続済み x86_64 / API 35 Android エミュレーターを使用。arm64-v8a はクロスコンパイル・リンクのみ。
 - この作業環境では Cargo の直接ダウンロードに制約があったため、作業フォルダー内の一時キャッシュへ依存を取得し offline build を実施。通常のビルドはこの一時キャッシュを必要としません。
+
+## 0.4.0 の検証
+
+- 標準16プリセット、疑似BASSの量・抽出帯域、JSON v2保存とv1読込、102 / 104要素JNI互換性を追加。
+- Rust 34テスト成功。60 Hz入力の120 Hz倍音、量への追従、高域への影響、左右差、bypass、DC・異常値を検証。可変callbackとリアルタイムallocation / deallocation検出でも疑似BASSを有効化。
+- workspace整形 / Clippy、およびCPAL featureを有効にしたClippy成功。
+- Android全11テスト成功（native / preset / optimizer 8、service 1、外部session 2）。50.608秒、0 failed / 0 ignored。
+- 両ABIのassembleDebug / assembleRelease / lintDebug成功（4分1秒）。LintはNo issues found。
+- debugのAPK v2署名、releaseの16 KB zipalign、両APK内各8個のELF LOAD alignmentが0x4000以上であることを確認。
+- Windows CPALの実デバイスで48 kHz stereo f32、疑似BASS 55%、preamp −30 dBの2秒デモを再生。187 callbacks、PCM underrun 0。Android性能の代替検証ではありません。
+- Android画面から16種類のメニュー表示と「疑似ウーファー」の選択を確認。10バンドへの切替、preamp −6.7 dB、疑似BASS 55% / 110 Hzの表示を確認して原本PNGを2枚追加。撮影後のアプリ設定は元のファイルとSHA-256が一致。
+- 0.4.0 debug SHA-256: 9eaa8e364f816b5bef2da4d8564e253fe70e011aba76d0a4f835026eb0021838。
+- 0.4.0 release SHA-256: 5368677e94fd29429b39163741ce4531e078cedd73c2dd2112f7ac3527d0a92d。
+- 実機の聴感・長時間性能評価は未実施。
 
 ## 0.3.0 の検証
 

@@ -1,6 +1,7 @@
 use crate::biquad::{Biquad, Coefficients};
 use crate::dynamics::Dynamics;
 use crate::params::{bounded, clean, Config, SpatialMode, MAX_BANDS};
+use crate::virtual_bass::{PreparedBass, VirtualBass};
 
 #[derive(Clone, Copy)]
 pub struct PreparedConfig {
@@ -17,6 +18,7 @@ pub struct PreparedConfig {
     attack: f32,
     release: f32,
     limiter_release: f32,
+    bass: PreparedBass,
 }
 
 impl PreparedConfig {
@@ -44,6 +46,7 @@ impl PreparedConfig {
             attack: (-1.0 / (sr * 0.010)).exp(),
             release: (-1.0 / (sr * 0.100)).exp(),
             limiter_release: (-1.0 / (sr * 0.050)).exp(),
+            bass: PreparedBass::new(config.virtual_bass_amount, config.virtual_bass_hz, sr),
         }
     }
 }
@@ -53,6 +56,7 @@ struct Pipeline {
     config: PreparedConfig,
     filters: [Biquad; MAX_BANDS],
     dynamics: Dynamics,
+    bass: VirtualBass,
     lowpass: [f32; 2],
 }
 
@@ -66,6 +70,7 @@ impl Pipeline {
         for i in 0..c.band_count {
             x = self.filters[i].process(x, c.coefficients[i]);
         }
+        x = self.bass.process(x, c.bass);
         if c.compressor {
             x = self
                 .dynamics
@@ -103,6 +108,7 @@ impl Dsp {
             config,
             filters: [Biquad::default(); MAX_BANDS],
             dynamics: Dynamics::default(),
+            bass: VirtualBass::default(),
             lowpass: [0.0; 2],
         };
         Self {
