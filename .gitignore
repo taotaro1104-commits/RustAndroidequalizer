@@ -1,0 +1,11 @@
+/target/
+**/build/
+/.gradle/
+/android/.gradle/
+/android/.kotlin/
+/android/local.properties
+**/.cxx/
+*.iml
+/.idea/
+/artifacts/
+

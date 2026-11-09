@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+exclude = ["vendor/sofar"]
+members = ["rust/crates/dsp-core", "rust/crates/dsp-resample", "rust/crates/dsp-spatial", "rust/crates/engine", "rust/crates/ffi-android", "rust/crates/autoeq"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.88"
+
+[workspace.dependencies]
+dsp-core = { path = "rust/crates/dsp-core" }
+dsp-resample = { path = "rust/crates/dsp-resample" }
+dsp-spatial = { path = "rust/crates/dsp-spatial" }
+engine = { path = "rust/crates/engine" }
+autoeq = { path = "rust/crates/autoeq" }
+rtrb = "=0.3.2"
+rubato = "=0.16.2"
+symphonia = { version = "=0.5.5", features = ["mp3", "aac", "isomp4", "alac", "aiff"] }
+rustfft = "=6.4.1"
+realfft = "=3.5.1"
+sofar = { version = "=0.4.0", default-features = false }
+
+[patch.crates-io]
+sofar = { path = "vendor/sofar" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
