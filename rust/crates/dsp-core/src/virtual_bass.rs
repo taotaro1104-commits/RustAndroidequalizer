@@ -63,6 +63,8 @@ pub struct VirtualBass {
 impl VirtualBass {
     pub fn process(&mut self, input: [f32; 2], c: PreparedBass) -> [f32; 2] {
         if c.amount == 0.0 {
+            // Do not replay a frozen filter tail when the effect is enabled again.
+            *self = Self::default();
             return input;
         }
         let low = self.low.process(clean(0.5 * (input[0] + input[1])), c.low);

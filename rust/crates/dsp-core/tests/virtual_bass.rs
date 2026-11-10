@@ -52,6 +52,45 @@ fn high_frequencies_are_not_broadly_distorted() {
     assert!(error < 0.0001, "high frequency error {error}");
 }
 #[test]
+fn reenabling_virtual_bass_after_silence_does_not_replay_old_audio() {
+    for hz in [60.0, 110.0, 180.0] {
+        let on = Config {
+            band_count: 0,
+            virtual_bass_hz: hz,
+            ..config(1.0)
+        };
+        let off = Config {
+            virtual_bass_amount: 0.0,
+            ..on
+        };
+        let mut dsp = Dsp::new(48000.0, PreparedConfig::new(&on, 48000.0));
+        for i in 0..48000 {
+            let input = 0.5 * (std::f32::consts::TAU * 60.0 * i as f32 / 48000.0).sin();
+            dsp.process_frame([input; 2]);
+        }
+
+        dsp.update(PreparedConfig::new(&off, 48000.0));
+        // Complete the 20 ms crossfade and leave the disabled effect silent for a second.
+        for _ in 0..48000 {
+            dsp.process_frame([0.0; 2]);
+        }
+        assert_eq!(dsp.process_frame([0.0; 2]), [0.0; 2]);
+
+        dsp.update(PreparedConfig::new(&on, 48000.0));
+        let mut peak = 0.0_f32;
+        // Cover the entire re-enable crossfade and the subsequent filter tail.
+        for _ in 0..4800 {
+            for sample in dsp.process_frame([0.0; 2]) {
+                peak = peak.max(sample.abs());
+            }
+        }
+        assert_eq!(
+            peak, 0.0,
+            "residual audio with extraction frequency {hz} Hz"
+        );
+    }
+}
+#[test]
 fn virtual_bass_preserves_side_signal_and_is_removed_by_bypass() {
     let c = config(0.8);
     let dry = config(0.0);
