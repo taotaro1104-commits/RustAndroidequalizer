@@ -9,6 +9,7 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 - 端末内ファイルの再生 / 一時停止 / シーク / リプレイ、複数ファイルのキュー・自動送り、60 秒のステレオデモ。
 - Symphonia による MP3、WAV、FLAC、Ogg Vorbis、AAC-LC / M4A、ALAC、AIFF のデコード（mono / stereo、DRM なし）。実際の対応可否はコンテナとコーデックの組み合わせによります。
 - 10 / 31 バンド PEQ、Hz / gain / Q 調整、対数周波数グラフとドラッグ操作、preamp、bypass。
+- 明るい配色の「音づくり・空間・ツール」画面。音質カーブ付きプリセット、折りたためる詳細調整、大きな文字への対応（[画面](docs/screenshots/README.md)、[検証](docs/ui-design-validation.md)）。
 - ステレオ連動 compressor、sample-peak limiter、M/S widener、低域 crossfeed。
 - 16種類の標準プリセットと、倍音生成による疑似BASS / ウーファー。量・対象帯域を調整し、JSONに保存できます（[設定と仕組み](docs/presets-bass.md)）。
 - 設定更新時の 20 ms クロスフェード。係数計算は control thread、処理は可変フレーム数対応。

@@ -4,6 +4,8 @@ import kotlin.math.max
 import kotlin.math.pow
 
 data class BuiltinPreset(val id: String, val title: String, val description: String, private val base: EqConfig) {
+    /** Lightweight visualization; does not calculate the prepared preset on the UI thread. */
+    val previewBands: List<EqBand> get() = base.bands
     /** Calculated on first selection, never on the audio thread. */
     val config: EqConfig by lazy {
         val curve = base.copy(preamp = 0f)
