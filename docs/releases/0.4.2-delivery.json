@@ -1,0 +1,28 @@
+{
+  "version": "0.4.2",
+  "application_source_commit": "61bb3c15dd6ae5ab8087b8cd3c24de33e9c3b35c",
+  "website_commit": "9e5b872336aacb925032521df5d2bde36b52d30a",
+  "application_package": {
+    "file": "rust-eq-0.4.2-package.zip",
+    "size_bytes": 14080886,
+    "sha256": "eef1db0ce195760ec018fba9e6fc43e2536f9f9e080b529710ed623c635f41aa",
+    "source_files": 199
+  },
+  "website_package": {
+    "file": "rust-eq-site-0.4.2.zip",
+    "size_bytes": 4257858,
+    "sha256": "5b14699c9709cc9e342fd4c2b6941cb0468862a52edaf3803831439735f85cbf"
+  },
+  "checks": {
+    "rust_workspace_tests": true,
+    "android_debug_release_builds": true,
+    "android_debug_release_lint": "No issues found",
+    "android_instrumentation_tests": 22,
+    "localized_site_viewports": 15,
+    "apk_v2_v3_signatures": true,
+    "source_and_package_hashes": true,
+    "github_remote_revisions": true
+  },
+  "public_server_deployed": false,
+  "google_drive_uploaded": false
+}
