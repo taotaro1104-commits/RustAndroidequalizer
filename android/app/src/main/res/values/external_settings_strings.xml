@@ -1,0 +1,8 @@
+<resources>
+    <string name="external_service_select_apps">Select at least one target app before enabling external EQ.</string>
+    <string name="external_service_not_selected">Select and save this app before connecting.</string>
+    <string name="external_service_start_failed">Could not start the external EQ listener. Open Rust EQ to try again.</string>
+    <string name="external_service_stop_failed">Could not stop the external EQ listener.</string>
+    <string name="external_service_waiting">Waiting for this app to announce a compatible audio session. Start playback in the target app; apps that do not announce sessions cannot connect.</string>
+    <string name="external_service_invalid_session">Could not connect to this audio session. Only selected apps with valid nonzero sessions are supported.</string>
+</resources>

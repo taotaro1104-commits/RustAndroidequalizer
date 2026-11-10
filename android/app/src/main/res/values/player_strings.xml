@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_choose_audio">Choose music and shape your sound</string>
+    <string name="player_local_audio">Local audio</string>
+    <string name="player_demo_title">Stereo demo · 60 seconds</string>
+    <string name="player_effect_load_reduced">Reduced audio processing to keep playback stable.</string>
+    <string name="player_effects_stopped">Stopped HRTF and reverb because audio processing exceeded the playback deadline.</string>
+    <string name="player_output_disconnected">Audio output disconnected. Press play to reconnect.</string>
+    <string name="player_error_details">%1$s\n%2$s</string>
+    <string name="player_playback_failed">Playback failed.</string>
+    <string name="player_load_failed">Could not load audio.</string>
+    <string name="player_seek_failed">Could not seek. Try loading the track again.</string>
+    <string name="player_audio_too_large">Choose an audio file no larger than 1 GB.</string>
+    <string name="player_file_open_failed">Could not open the file.</string>
+    <string name="player_service_start_failed">Could not start the playback service.</string>
+    <string name="player_audio_focus_failed">Could not obtain audio focus.</string>
+    <string name="player_choose_ir_first">Choose an IR file first.</string>
+    <string name="player_choose_sofa_first">Choose a SOFA file first.</string>
+    <string name="player_effect_apply_failed">Could not apply the effect. Check the playback state.</string>
+    <string name="player_effect_prepare_failed">Could not prepare the effect. Keeping the previous settings.</string>
+    <string name="player_effect_too_large">Choose an effect file no larger than 64 MB.</string>
+    <string name="player_effect_import_failed">Could not import the effect file.</string>
+    <string name="player_preset_saved">Saved “%1$s”.</string>
+    <string name="player_destination_open_failed">Could not open the save destination.</string>
+    <string name="player_profile_exported">Exported EQ settings.</string>
+    <string name="player_profile_export_failed">Could not export EQ settings.</string>
+    <string name="player_preset_load_failed">Could not load the preset.</string>
+    <string name="player_profile_too_large">The profile is too large.</string>
+    <string name="player_profile_open_failed">Could not open the profile.</string>
+    <string name="player_profile_imported">Profile imported. Number of bands: %1$d.</string>
+    <string name="player_profile_import_failed">Could not import the profile.</string>
+    <string name="player_measurement_too_large">Choose a measurement CSV no larger than 512 KB.</string>
+    <string name="player_measurement_open_failed">Could not open the measurement file.</string>
+    <string name="player_optimization_changed">EQ changed during optimization, so the result was not applied. Run optimization again.</string>
+    <string name="player_optimization_failed">Optimization failed.</string>
+    <string name="player_optimization_summary">Rust EQ independent optimizer · Level-normalized shape RMSE: %1$.3f → %2$.3f dB</string>
+    <string name="player_optimization_summary_fallback">Rust EQ independent optimizer · Correction generated</string>
+    <string name="player_preset_format_unsupported">Unsupported preset format.</string>
+    <string name="player_band_count_invalid">The number of bands must be between 1 and 31.</string>
+    <string name="player_setting_out_of_range">A setting is outside its allowed range.</string>
+    <string name="player_pk_count_invalid">Between 1 and 31 enabled PK filters are required.</string>
+    <string name="player_pk_only">This version only supports PK filters: %1$s</string>
+    <string name="player_session_refused">The device refused the EQ connection</string>
+    <string name="player_session_connecting">Connecting</string>
+    <string name="player_session_other_control">Another EQ has control</string>
+    <string name="player_session_bypass">Bypassed</string>
+    <string name="player_session_limited">Active · Limited to the device gain range</string>
+    <string name="player_session_applied">Active · Approximated on device EQ</string>
+    <string name="player_session_apply_failed">Could not apply EQ. The audio route may have closed.</string>
+    <plurals name="player_optimization_generated">
+        <item quantity="one">Generated correction with %1$d band. Lower the volume before comparing.</item>
+        <item quantity="other">Generated correction with %1$d bands. Lower the volume before comparing.</item>
+    </plurals>
+</resources>

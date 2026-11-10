@@ -3,6 +3,7 @@ package dev.rusteq
 import android.app.*
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.content.res.Configuration
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
@@ -34,7 +35,7 @@ class PlaybackService : Service() {
     override fun onCreate() {
         super.onCreate()
         wakeLock = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RustEQ:playback").apply { setReferenceCounted(false) }
-        getSystemService(NotificationManager::class.java).createNotificationChannel(NotificationChannel(CHANNEL, "音楽の再生", NotificationManager.IMPORTANCE_LOW))
+        updateNotificationChannel()
         session = MediaSession(this, "RustEQ").apply {
             setCallback(object : MediaSession.Callback() {
                 override fun onPlay() { player.resumeFromNotification() }
@@ -59,6 +60,22 @@ class PlaybackService : Service() {
         }
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        updateNotificationChannel()
+        if (runtime.playbackServiceRunning.value) {
+            val state = player.state.value
+            updateSession(state)
+            publishNotification(state)
+        }
+    }
+
+    private fun updateNotificationChannel() {
+        getSystemService(NotificationManager::class.java).createNotificationChannel(
+            NotificationChannel(CHANNEL, getString(R.string.service_playback_channel), NotificationManager.IMPORTANCE_LOW)
+        )
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == STOP) {
             player.stopPlayback()
@@ -78,21 +95,21 @@ class PlaybackService : Service() {
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val builder = Notification.Builder(this, CHANNEL)
             .setSmallIcon(dev.rusteq.R.drawable.ic_notification)
-            .setContentTitle(state.title)
-            .setContentText(if (state.loading) "読み込み中" else if (state.playing) "再生中" else "一時停止")
+            .setContentTitle(state.title.resolve(this))
+            .setContentText(getString(if (state.loading) R.string.service_loading else if (state.playing) R.string.service_playing else R.string.service_paused))
             .setContentIntent(open)
             .setOnlyAlertOnce(true)
             .setOngoing(state.playing)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
-            .addAction(Notification.Action.Builder(Icon.createWithResource("android", if (state.playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play), if (state.playing) "一時停止" else "再生", action(if (state.playing) PAUSE else PLAY)).build())
+            .addAction(Notification.Action.Builder(Icon.createWithResource("android", if (state.playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play), getString(if (state.playing) R.string.service_pause else R.string.service_play), action(if (state.playing) PAUSE else PLAY)).build())
         val hasNext = state.queueIndex < state.queueSize-1
-        if (hasNext) builder.addAction(Notification.Action.Builder(Icon.createWithResource("android", android.R.drawable.ic_media_next), "次の曲", action(NEXT)).build())
-        builder.addAction(Notification.Action.Builder(Icon.createWithResource("android", android.R.drawable.ic_menu_close_clear_cancel), "停止", action(STOP)).build())
+        if (hasNext) builder.addAction(Notification.Action.Builder(Icon.createWithResource("android", android.R.drawable.ic_media_next), getString(R.string.service_next_track), action(NEXT)).build())
+        builder.addAction(Notification.Action.Builder(Icon.createWithResource("android", android.R.drawable.ic_menu_close_clear_cancel), getString(R.string.service_stop), action(STOP)).build())
         return builder.setStyle(Notification.MediaStyle().setMediaSession(session.sessionToken).setShowActionsInCompactView(*if (hasNext) intArrayOf(0, 1, 2) else intArrayOf(0, 1))).build()
     }
 
     private fun updateSession(state: PlayerState) {
-        session.setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, state.title).putLong(MediaMetadata.METADATA_KEY_DURATION, (state.metrics[13]*1000).toLong()).build())
+        session.setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, state.title.resolve(this)).putLong(MediaMetadata.METADATA_KEY_DURATION, (state.metrics[13]*1000).toLong()).build())
         session.setPlaybackState(PlaybackState.Builder()
             .setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_SEEK_TO or PlaybackState.ACTION_STOP or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS)
             .setState(if (state.playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED, (state.metrics[6]*1000).toLong(), if (state.playing) 1f else 0f).build())

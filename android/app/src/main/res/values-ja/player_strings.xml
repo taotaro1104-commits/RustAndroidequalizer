@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_choose_audio">音楽を選んで、音を整える</string>
+    <string name="player_local_audio">端末の音声</string>
+    <string name="player_demo_title">ステレオデモ · 60 秒</string>
+    <string name="player_effect_load_reduced">再生の安定性を保つため、音響処理の負荷を下げました。</string>
+    <string name="player_effects_stopped">音響処理が再生の期限を超えたため、HRTF とリバーブを停止しました。</string>
+    <string name="player_output_disconnected">音声出力が切断されました。再生ボタンで接続し直せます。</string>
+    <string name="player_error_details">%1$s\n%2$s</string>
+    <string name="player_playback_failed">再生に失敗しました。</string>
+    <string name="player_load_failed">音声の読み込みに失敗しました。</string>
+    <string name="player_seek_failed">再生位置を変更できませんでした。曲を読み込み直してください。</string>
+    <string name="player_audio_too_large">ファイルは 1 GB 以下にしてください。</string>
+    <string name="player_file_open_failed">ファイルを開けませんでした。</string>
+    <string name="player_service_start_failed">再生サービスを開始できませんでした。</string>
+    <string name="player_audio_focus_failed">音声フォーカスを取得できませんでした。</string>
+    <string name="player_choose_ir_first">先に IR ファイルを選んでください。</string>
+    <string name="player_choose_sofa_first">先に SOFA ファイルを選んでください。</string>
+    <string name="player_effect_apply_failed">エフェクトを適用できませんでした。再生状態を確認してください。</string>
+    <string name="player_effect_prepare_failed">エフェクトの準備に失敗しました。前の設定を維持します。</string>
+    <string name="player_effect_too_large">エフェクトファイルは 64 MB 以下にしてください。</string>
+    <string name="player_effect_import_failed">エフェクトファイルを読み込めませんでした。</string>
+    <string name="player_preset_saved">「%1$s」を保存しました。</string>
+    <string name="player_destination_open_failed">保存先を開けませんでした。</string>
+    <string name="player_profile_exported">EQ 設定を書き出しました。</string>
+    <string name="player_profile_export_failed">EQ 設定を書き出せませんでした。</string>
+    <string name="player_preset_load_failed">プリセットを読み込めませんでした。</string>
+    <string name="player_profile_too_large">プロファイルが大きすぎます。</string>
+    <string name="player_profile_open_failed">プロファイルを開けませんでした。</string>
+    <string name="player_profile_imported">%1$d バンドのプロファイルを読み込みました。</string>
+    <string name="player_profile_import_failed">プロファイルを読み込めませんでした。</string>
+    <string name="player_measurement_too_large">測定 CSV は 512 KB 以下にしてください。</string>
+    <string name="player_measurement_open_failed">測定ファイルを開けませんでした。</string>
+    <string name="player_optimization_changed">最適化中に EQ が変更されたため、結果を適用しませんでした。もう一度実行してください。</string>
+    <string name="player_optimization_failed">最適化に失敗しました。</string>
+    <string name="player_optimization_summary">Rust EQ 独自最適化 · 音量を正規化した周波数特性の RMSE: %1$.3f → %2$.3f dB</string>
+    <string name="player_optimization_summary_fallback">Rust EQ 独自最適化 · 補正を生成しました</string>
+    <string name="player_preset_format_unsupported">未対応のプリセット形式です。</string>
+    <string name="player_band_count_invalid">バンド数は 1〜31 です。</string>
+    <string name="player_setting_out_of_range">設定値が範囲外です。</string>
+    <string name="player_pk_count_invalid">ON の PK フィルターが 1〜31 個必要です。</string>
+    <string name="player_pk_only">この版は PK フィルターのみ対応しています: %1$s</string>
+    <string name="player_session_refused">端末が EQ の接続を拒否しました</string>
+    <string name="player_session_connecting">接続中</string>
+    <string name="player_session_other_control">ほかの EQ が制御中</string>
+    <string name="player_session_bypass">バイパス</string>
+    <string name="player_session_limited">適用中 · 端末のゲイン範囲に制限</string>
+    <string name="player_session_applied">適用中 · 端末 EQ へ近似</string>
+    <string name="player_session_apply_failed">EQ を適用できません。音声経路が終了した可能性があります。</string>
+    <plurals name="player_optimization_generated">
+        <item quantity="other">%1$d バンドの補正を生成しました。音量を下げて比較してください。</item>
+    </plurals>
+</resources>

@@ -17,6 +17,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import dev.rusteq.R
 import dev.rusteq.audio.EqConfig
 import dev.rusteq.audio.responseDb
 import kotlin.math.*
@@ -67,6 +69,7 @@ internal fun PresetCurve(gains: List<Float>, color: Color, modifier: Modifier = 
 
 @Composable
 internal fun SoundCurve(config: EqConfig, selected: Int, sampleRate: Float, onSelect: (Int) -> Unit, onEdit: (Int, Float, Float) -> Unit) {
+    val curveDescription = stringResource(R.string.ui_curve_accessibility)
     val current by rememberUpdatedState(config)
     val select by rememberUpdatedState(onSelect)
     val edit by rememberUpdatedState(onEdit)
@@ -79,7 +82,7 @@ internal fun SoundCurve(config: EqConfig, selected: Int, sampleRate: Float, onSe
         (p.x - x).pow(2) + (p.y - y).pow(2)
     }
     Canvas(Modifier.fillMaxWidth().height(168.dp)
-        .semantics { contentDescription = "音質カーブ。下の詳細調整でも周波数とゲインを変更できます" }
+        .semantics { contentDescription = curveDescription }
         .pointerInput(Unit) { detectTapGestures { p -> select(nearest(p, size.width, size.height)) } }
         .pointerInput(Unit) { detectDragGestures(onDragStart = { p -> dragging = nearest(p, size.width, size.height); select(dragging) }) { change, _ ->
             change.consume()

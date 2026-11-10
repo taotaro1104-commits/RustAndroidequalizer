@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="service_playback_channel">Music playback</string>
+    <string name="service_loading">Loading</string>
+    <string name="service_playing">Playing</string>
+    <string name="service_paused">Paused</string>
+    <string name="service_pause">Pause</string>
+    <string name="service_play">Play</string>
+    <string name="service_next_track">Next track</string>
+    <string name="service_stop">Stop</string>
+    <string name="service_external_eq_channel">External app EQ connections</string>
+    <string name="service_external_eq_title">External app EQ · Supported sessions only</string>
+    <string name="service_external_eq_sessions">Sessions: %1$d · Not guaranteed for every app</string>
+</resources>

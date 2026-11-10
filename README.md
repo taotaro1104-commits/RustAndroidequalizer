@@ -4,6 +4,8 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 
 紹介用の画面は [スクリーンショット一覧](docs/screenshots/README.md) を参照してください。
 
+日本語・Englishに対応し、端末の優先言語に合わせて表示します。Android 13以降ではOSのアプリ言語設定からも選べます（[言語の設定と対応範囲](docs/localization.md)）。
+
 ## 実装した機能
 
 - 端末内ファイルの再生 / 一時停止 / シーク / リプレイ、複数ファイルのキュー・自動送り、60 秒のステレオデモ。
@@ -23,7 +25,7 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 - Eco / Standard / Low latency の品質設定、callback の実測負荷に応じた段階的な軽量化。
 - foreground media playback service、MediaSession、通知からの再生・一時停止・次曲・停止。画面を閉じても再生を維持。
 - 音声フォーカス喪失・ヘッドホン切断時の一時停止。キューは選択済み URI の読み取り許可とともに復元。
-- 他アプリが公開した非ゼロ音声セッションに Android Equalizer を接続する任意機能。端末 EQ への近似であり、全アプリの system-wide Rust DSP ではありません（[範囲と使い方](docs/external-eq.md)）。
+- 対象アプリを検索・複数選択して保存する「他アプリにもEQ」。未接続時の接続ボタン、再接続、端末再起動後の待ち受け復元に対応します。対応する非ゼロ音声セッションに Android Equalizer を接続する機能で、全アプリの system-wide Rust DSP ではありません（[範囲と使い方](docs/external-eq.md)）。
 
 ## ビルド
 
@@ -47,7 +49,9 @@ sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.2.12479018' 'cmak
 bash scripts/build-android.sh
 ```
 
-APK：`android/app/build/outputs/apk/debug/app-debug.apk`。`arm64-v8a` とエミュレーター用 `x86_64` を含みます。release は配布用署名を別途設定してください。
+APK：`android/app/build/outputs/apk/debug/app-debug.apk`。`arm64-v8a` とエミュレーター用 `x86_64` を含みます。配布用releaseは [署名手順](docs/android-signing.md) のスクリプトで署名し、`dist/signed/` に出力します。
+
+オリジナルの「Curve R」アイコンは [SVG・PNGとデザイン説明](docs/branding/README.md) を参照してください。
 
 ## 検証
 
@@ -82,7 +86,7 @@ JNI はソースを開く・設定する・再生制御・メトリクス取得�
 
 ## 現在の範囲と制限
 
-0.4.0 は **PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対応する外部セッションへの EQ** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
+0.4.2 は **日本語・English / PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対象アプリの保存・対応セッションへの接続** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
 
 - 録音権限・ストレージ全体の読み取り権限・インターネット権限は要求しません。ファイルは Android の選択画面で指定します。
 - バックグラウンド再生には `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK` / `WAKE_LOCK` を使用します。MediaSession の通知のみを投稿します。

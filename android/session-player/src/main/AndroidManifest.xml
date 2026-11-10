@@ -1,5 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:label="Rust EQ test player" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:allowBackup="false">
-        <activity android:name=".SessionPlayer" android:exported="true" android:launchMode="singleTask" />
+        <activity android:name=".SessionPlayer" android:exported="true" android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

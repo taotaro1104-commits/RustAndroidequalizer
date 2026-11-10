@@ -4,6 +4,8 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.SystemClock
+import android.os.Bundle
+import android.os.Build
 import android.view.MotionEvent
 import android.view.InputDevice
 import android.view.accessibility.AccessibilityNodeInfo
@@ -31,15 +33,37 @@ class DesignNavigationTest {
             find(instrument.uiAutomation.rootInActiveWindow, label)?.let { return it }
             Thread.sleep(50)
         }
-        error("Visible accessible control missing: $label")
+        val visible = mutableListOf<String>()
+        fun describe(node: AccessibilityNodeInfo?) {
+            if (node == null) return
+            if (!node.text.isNullOrBlank()) visible += node.text.toString() + " " + Rect().also(node::getBoundsInScreen)
+            for (index in 0 until node.childCount) describe(node.getChild(index))
+        }
+        describe(instrument.uiAutomation.rootInActiveWindow)
+        instrument.uiAutomation.takeScreenshot()?.let { bitmap ->
+            File(instrument.targetContext.getExternalFilesDir(null), "external-picker-failure.png").outputStream().use {
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+            }
+            bitmap.recycle()
+        }
+        error("Visible accessible control missing: $label. Visible: $visible")
     }
 
     private fun tap(label: String) {
         val deadline = SystemClock.elapsedRealtime() + 5000
+        var previous = Rect()
+        var stableSince = SystemClock.elapsedRealtime()
         while (SystemClock.elapsedRealtime() < deadline) {
             val node = find(instrument.uiAutomation.rootInActiveWindow, label)
             val bounds = Rect()
             node?.getBoundsInScreen(bounds)
+            if (bounds != previous) {
+                previous = Rect(bounds)
+                stableSince = SystemClock.elapsedRealtime()
+            }
+            // A fling can leave an accessible node visible while its touch
+            // coordinates are still moving. Wait for the actual target to settle.
+            if (SystemClock.elapsedRealtime() - stableSince < 250) { Thread.sleep(50); continue }
             if (node?.isVisibleToUser == true && !bounds.isEmpty) {
                 // Exercise the actual touch target, including Compose hit testing.
                 val time = SystemClock.uptimeMillis()
@@ -95,25 +119,25 @@ class DesignNavigationTest {
         val original = app.player.state.value.config
         val activity = instrument.startActivitySync(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         try {
-            tap("空間")
-            awaitNode("音の広がり")
-            tap("ツール")
-            awaitNode("設定を持ち歩く")
-            tap("音づくり")
-            tap("ボーカル")
+            tap(context.getString(R.string.ui_tab_space))
+            awaitNode(context.getString(R.string.ui_space_heading))
+            tap(context.getString(R.string.ui_tab_tools))
+            awaitNode(context.getString(R.string.ui_tools_heading))
+            tap(context.getString(R.string.ui_tab_sound))
+            tap(context.getString(R.string.ui_preset_vocal))
             val deadline = SystemClock.elapsedRealtime() + 5000
             while (app.player.state.value.presetTitle != "ボーカル" && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
             assertEquals("ボーカル", app.player.state.value.presetTitle)
             assertEquals(10, app.player.state.value.config.bands.size)
             val selected = app.player.state.value.config
-            reveal("バンドを詳しく調整")
-            tap("バンドを詳しく調整")
-            awaitNode("詳細調整を閉じる")
-            tap("空間")
-            tap("音づくり")
+            reveal(context.getString(R.string.ui_open_details))
+            tap(context.getString(R.string.ui_open_details))
+            awaitNode(context.getString(R.string.ui_close_details))
+            tap(context.getString(R.string.ui_tab_space))
+            tap(context.getString(R.string.ui_tab_sound))
             assertEquals(selected, app.player.state.value.config)
-            awaitNode("詳細調整を閉じる")
-            awaitNode("イコライザーを有効にする")
+            awaitNode(context.getString(R.string.ui_close_details))
+            awaitNode(context.getString(R.string.ui_enable_eq))
         } finally {
             instrument.runOnMainSync { app.player.configure { original }; activity.finish() }
         }
@@ -130,12 +154,59 @@ class DesignNavigationTest {
             awaitState("Queue source must load") { app.player.state.value.loaded && !app.player.state.value.loading }
             instrument.runOnMainSync { app.player.stopPlayback() }
             awaitState("Source must stop while retaining the queue") { !app.player.state.value.loaded && !app.playbackServiceRunning.value }
-            tap("再生リストを再生")
+            tap(context.getString(R.string.ui_resume_queue))
             awaitState("The retained queue must load again from the empty player") { app.player.state.value.loaded && !app.player.state.value.loading }
             assertEquals(1, app.player.state.value.queueSize)
         } finally {
             instrument.runOnMainSync { app.player.clearQueue(); app.player.stopPlayback(); activity.finish() }
             file.delete()
+        }
+    }
+
+    @Test fun targetPickerSavesOnlyOnSaveAndConnectLaunchesSelectedPlayer() {
+        val context = instrument.targetContext
+        val app = context.applicationContext as EqApplication
+        val original = app.externalEqSettings.state.value
+        app.externalEqSettings.update { it.copy(selectedPackages = emptySet(), enabled = false) }
+        if (Build.VERSION.SDK_INT >= 33) instrument.uiAutomation.grantRuntimePermission(context.packageName, android.Manifest.permission.POST_NOTIFICATIONS)
+        val activity = instrument.startActivitySync(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        val player = Intent().setComponent(android.content.ComponentName("dev.rusteq.fixture", "dev.rusteq.fixture.SessionPlayer")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        fun editNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+            if (node == null) return null
+            if (node.isEditable) return node
+            for (index in 0 until node.childCount) editNode(node.getChild(index))?.let { return it }
+            return null
+        }
+        fun selectFixture() {
+            tap(context.getString(R.string.external_ui_choose_apps))
+            awaitNode(context.getString(R.string.external_ui_search_apps))
+            val editor = editNode(instrument.uiAutomation.rootInActiveWindow) ?: error("App search must be editable")
+            assertTrue(editor.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "dev.rusteq.fixture")
+            }))
+            tap("Rust EQ test player")
+        }
+        try {
+            tap(context.getString(R.string.ui_tab_tools))
+            reveal(context.getString(R.string.external_ui_choose_apps))
+            selectFixture()
+            tap(context.getString(R.string.external_ui_cancel))
+            assertTrue("Cancel discards draft selection", app.externalEqSettings.state.value.selectedPackages.isEmpty())
+            selectFixture()
+            tap(context.getString(R.string.external_ui_save))
+            awaitState("Picker saves the selected package") { app.externalEqSettings.state.value.selectedPackages == setOf("dev.rusteq.fixture") }
+            assertFalse("Choosing apps alone does not silently enable EQ", app.externalEqSettings.state.value.enabled)
+            reveal(context.getString(R.string.external_ui_connect))
+            tap(context.getString(R.string.external_ui_connect))
+            awaitState("Connect starts the listener and attaches the selected app") {
+                app.systemEqState.value.running && app.systemEqState.value.sessions.any { it.player == "dev.rusteq.fixture" && it.connected }
+            }
+            awaitNode("Integration test player\nSession " + app.systemEqState.value.sessions.first { it.player == "dev.rusteq.fixture" }.id)
+        } finally {
+            runCatching { context.startActivity(Intent(player).setAction("STOP")) }
+            instrument.runOnMainSync { ExternalEqController.stop(context); activity.finish() }
+            awaitState("Cleanup stops target listener") { !app.systemEqState.value.running }
+            app.externalEqSettings.update { original }
         }
     }
 }

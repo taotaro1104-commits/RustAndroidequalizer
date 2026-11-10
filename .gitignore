@@ -8,4 +8,13 @@
 *.iml
 /.idea/
 /artifacts/
+/.signing/
+/dist/
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.idsig
+__pycache__/
+*.pyc
 

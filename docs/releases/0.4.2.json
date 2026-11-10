@@ -1,0 +1,63 @@
+{
+  "file": "rust-eq-0.4.2-release.apk",
+  "version": "0.4.2",
+  "version_code": 6,
+  "size_bytes": 15575599,
+  "sha256": "caa531b9daaf7e76e2c69cb252cc18fe0b45d38b9601789db73c897878181342",
+  "certificate_sha256": "6d6162953d457d4568fb69b61e277188d8445ad6cb7c5c9f8531b2e63473e607",
+  "signatures": [
+    "v2",
+    "v3"
+  ],
+  "min_sdk": 29,
+  "target_sdk": 35,
+  "debuggable": false,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "supported_languages": [
+    "en",
+    "ja"
+  ],
+  "elf_libraries_16kb_aligned": 8,
+  "android_tests_passed": 22,
+  "android_tests_skipped": 0,
+  "android_test_seconds": 62.988,
+  "debug_lint": "No issues found",
+  "release_lint": "No issues found",
+  "boot": {
+    "device_power_cycled": true,
+    "adb_reboot_command_timed_out": true,
+    "foreground_listener_restored_before_opening_app": true,
+    "target_selection_and_enabled_retained": true,
+    "avd": "rusteq_locale",
+    "api": "35"
+  },
+  "release_smoke": {
+    "upgrade_from_0_4_1": true,
+    "notification_denied_target_still_opened": true,
+    "notification_denied_listener_foreground": true,
+    "screens": [
+      {
+        "path": "docs/screenshots/15-target-picker-en.png",
+        "visible_label": "1 app selected"
+      },
+      {
+        "path": "docs/screenshots/16-target-connected-en.png",
+        "visible_label": "Connected to device EQ"
+      },
+      {
+        "path": "docs/screenshots/17-target-connected-ja.png",
+        "visible_label": "端末EQに接続済み"
+      },
+      {
+        "path": "docs/screenshots/18-target-picker-ja.png",
+        "visible_label": "アプリ名・パッケージ名で検索"
+      }
+    ],
+    "api": "35"
+  },
+  "original_avd_disks_unchanged": true,
+  "temporary_avd_stopped_and_removed": true
+}

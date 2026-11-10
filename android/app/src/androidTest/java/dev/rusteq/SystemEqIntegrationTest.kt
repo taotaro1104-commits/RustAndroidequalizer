@@ -24,6 +24,8 @@ class SystemEqIntegrationTest {
         val instrument = InstrumentationRegistry.getInstrumentation()
         val context = instrument.targetContext
         val app = context.applicationContext as EqApplication
+        val originalExternal = app.externalEqSettings.state.value
+        app.externalEqSettings.update { it.copy(selectedPackages = setOf("dev.rusteq.fixture"), enabled = true) }
         val activity = instrument.startActivitySync(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         val original = app.player.state.value.config
         fun waitFor(message: String, predicate: () -> Boolean) {
@@ -36,9 +38,10 @@ class SystemEqIntegrationTest {
             instrument.runOnMainSync { app.player.configure { it.copy(bypass = false) }; ContextCompat.startForegroundService(context, Intent(context, SystemEqService::class.java).setAction(SystemEqService.START)) }
             waitFor("Session EQ service starts") { app.systemEqState.value.running }
             try { context.startActivity(player) } catch (e: android.content.ActivityNotFoundException) { assumeNoException("Install :session-player:assembleDebug fixture first", e) }
-            waitFor("External player must be processed") { app.systemEqState.value.sessions.any { it.player == "dev.rusteq.fixture" && it.bands > 0 && it.status.startsWith("適用中") } }
+            val activeLabels = listOf(R.string.player_session_applied, R.string.player_session_limited).map(context::getString)
+            waitFor("External player must be processed") { app.systemEqState.value.sessions.any { it.player == "dev.rusteq.fixture" && it.bands > 0 && it.status.resolve(context) in activeLabels } }
             instrument.runOnMainSync { app.player.configure { it.copy(bypass = true) } }
-            waitFor("Master bypass reaches the external session") { app.systemEqState.value.sessions.any { it.status == "バイパス" } }
+            waitFor("Master bypass reaches the external session") { app.systemEqState.value.sessions.any { it.status.resolve(context) == context.getString(R.string.player_session_bypass) } }
             context.startActivity(Intent(player).setAction("STOP"))
             waitFor("External close releases the effect") { app.systemEqState.value.sessions.isEmpty() }
             context.stopService(Intent(context, SystemEqService::class.java))
@@ -46,6 +49,7 @@ class SystemEqIntegrationTest {
         } finally {
             runCatching { context.startActivity(Intent(player).setAction("STOP")) }
             context.stopService(Intent(context, SystemEqService::class.java))
+            app.externalEqSettings.update { originalExternal }
             instrument.runOnMainSync { app.player.configure { original }; activity.finish() }
         }
     }

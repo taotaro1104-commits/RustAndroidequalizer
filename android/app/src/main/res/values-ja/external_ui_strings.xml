@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_ui_choose_apps">対象アプリを選ぶ</string>
+    <string name="external_ui_save">保存</string>
+    <string name="external_ui_cancel">キャンセル</string>
+    <string name="external_ui_connect">接続</string>
+    <string name="external_ui_reconnect">再接続</string>
+    <string name="external_ui_search_apps">アプリ名・パッケージ名で検索</string>
+    <string name="external_ui_enable">保存したアプリのEQを有効にする</string>
+    <string name="external_ui_supported_sessions">対象アプリを選んで保存してください。「接続」でアプリを開き、曲を再生し直すと、対応する音声セッションを公開するアプリにEQを適用します。Androidの制限により、他アプリの音声を強制的にRust DSPへ通すことはできません。</string>
+    <string name="external_ui_listening">保存したアプリを待ち受け中</string>
+    <string name="external_ui_listener_paused">待ち受けは停止中です。再開すると接続できます。</string>
+    <string name="external_ui_listener_off">待ち受けは無効です</string>
+    <string name="external_ui_resume">待ち受けを再開</string>
+    <string name="external_ui_loading">アプリを読み込み中…</string>
+    <string name="external_ui_load_failed">アプリ一覧を読み込めませんでした。保存済みのパッケージ名は保持されています。この画面を開き直すと再試行します。</string>
+    <string name="external_ui_no_matches">一致するアプリがありません</string>
+    <string name="external_ui_unavailable">利用できないアプリです。削除済み、または起動できない可能性があります。</string>
+    <string name="external_ui_target_off">保存済み · EQ待ち受けは無効</string>
+    <string name="external_ui_connected">端末EQに接続済み</string>
+    <string name="external_ui_connection_failed">EQに接続できていません。「接続」で再試行してください。</string>
+    <string name="external_ui_waiting">未接続 · 対応する音声セッションを待っています</string>
+    <string name="external_ui_session_status">セッション %1$d · %2$s</string>
+    <string name="external_ui_launch_failed">%1$sを開けませんでした。保存した選択内容は保持されています。</string>
+    <string name="external_ui_boot_title">再起動後に再開</string>
+    <string name="external_ui_boot_description">端末の再起動後に、有効な待ち受けを復元する</string>
+    <string name="external_ui_restore_limits">強制停止やバックグラウンド制限により、自動再開できない場合があります。Rust EQを開き直すか「待ち受けを再開」を押してください。再接続には対象アプリからの新しい対応音声セッションが必要です。</string>
+    <string name="external_ui_notification_hint">通知が許可されていません。選択内容は保存されています。実行中の待ち受けはAndroidの「実行中のアプリ」にのみ表示される場合があります。</string>
+    <plurals name="external_ui_saved_apps">
+        <item quantity="other">保存済み：%1$d個のアプリ</item>
+    </plurals>
+    <plurals name="external_ui_selected_apps">
+        <item quantity="other">%1$d個のアプリを選択中</item>
+    </plurals>
+</resources>

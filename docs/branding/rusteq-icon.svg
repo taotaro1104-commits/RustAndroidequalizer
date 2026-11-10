@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72" width="512" height="512" role="img" aria-labelledby="title desc">
+  <title id="title">Rust EQ — Curve R</title>
+  <desc id="desc">An original white R drawn as a flowing sound curve, with an amber tuning point on a blue background.</desc>
+  <rect x="18" y="18" width="72" height="72" rx="18" fill="#4056CE"/>
+  <path d="M37 74V35H51C64 35 71 39 71 47C71 55 63 60 51 60H37M52 60C60 60 61 74 72 74" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="71" cy="47" r="5.5" fill="#FFD08A"/>
+</svg>

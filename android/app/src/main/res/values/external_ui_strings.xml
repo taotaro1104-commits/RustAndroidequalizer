@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_ui_choose_apps">Choose apps</string>
+    <string name="external_ui_save">Save</string>
+    <string name="external_ui_cancel">Cancel</string>
+    <string name="external_ui_connect">Connect</string>
+    <string name="external_ui_reconnect">Reconnect</string>
+    <string name="external_ui_search_apps">Search apps or package names</string>
+    <string name="external_ui_enable">Keep EQ enabled for saved apps</string>
+    <string name="external_ui_supported_sessions">Choose apps and save them. Tap Connect to open an app, then start or reopen a track. EQ applies only when that app shares a compatible audio session. Android does not let this app force other audio through Rust DSP.</string>
+    <string name="external_ui_listening">Listening for saved apps</string>
+    <string name="external_ui_listener_paused">Listener is paused. Resume to connect.</string>
+    <string name="external_ui_listener_off">Listener is off</string>
+    <string name="external_ui_resume">Resume listener</string>
+    <string name="external_ui_loading">Loading apps…</string>
+    <string name="external_ui_load_failed">Could not load the app list. Saved package names are retained. Reopen this screen to retry.</string>
+    <string name="external_ui_no_matches">No matching apps</string>
+    <string name="external_ui_unavailable">App unavailable. It may be uninstalled or unable to open.</string>
+    <string name="external_ui_target_off">Saved · EQ listener off</string>
+    <string name="external_ui_connected">Connected to device EQ</string>
+    <string name="external_ui_connection_failed">EQ connection needs attention. Try Connect again.</string>
+    <string name="external_ui_waiting">Not connected · Waiting for a compatible audio session</string>
+    <string name="external_ui_session_status">Session %1$d · %2$s</string>
+    <string name="external_ui_launch_failed">Could not open %1$s. Its saved selection is retained.</string>
+    <string name="external_ui_boot_title">Resume after restart</string>
+    <string name="external_ui_boot_description">Restore the enabled listener after a device restart</string>
+    <string name="external_ui_restore_limits">Android may prevent automatic restart after a force stop or due to background limits. Reopen Rust EQ or tap Resume listener. Apps must share a new compatible session to reconnect.</string>
+    <string name="external_ui_notification_hint">Notification permission is off. Your choices are saved; Android may show the running listener only in active-app controls.</string>
+    <plurals name="external_ui_saved_apps">
+        <item quantity="one">%1$d saved app</item>
+        <item quantity="other">%1$d saved apps</item>
+    </plurals>
+    <plurals name="external_ui_selected_apps">
+        <item quantity="one">%1$d app selected</item>
+        <item quantity="other">%1$d apps selected</item>
+    </plurals>
+</resources>

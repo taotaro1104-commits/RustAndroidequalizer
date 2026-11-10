@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="service_playback_channel">音楽の再生</string>
+    <string name="service_loading">読み込み中</string>
+    <string name="service_playing">再生中</string>
+    <string name="service_paused">一時停止</string>
+    <string name="service_pause">一時停止</string>
+    <string name="service_play">再生</string>
+    <string name="service_next_track">次の曲</string>
+    <string name="service_stop">停止</string>
+    <string name="service_external_eq_channel">他アプリ EQ の接続</string>
+    <string name="service_external_eq_title">他アプリ EQ · 対応セッションのみ</string>
+    <string name="service_external_eq_sessions">%1$d セッション · 全アプリへの適用は保証されません</string>
+</resources>

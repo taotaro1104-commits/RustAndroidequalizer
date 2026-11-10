@@ -1,5 +1,9 @@
 package dev.rusteq.audio
 
+import dev.rusteq.R
+import dev.rusteq.UiText
+import dev.rusteq.UiTextException
+import dev.rusteq.uiText
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.*
@@ -44,11 +48,11 @@ data class EqConfig(
 
         fun fromJson(text: String): EqConfig {
             val j = JSONObject(text)
-            require(j.getInt("version") in 1..2) { "未対応のプリセット形式です" }
+            if (j.getInt("version") !in 1..2) throw UiTextException(uiText(R.string.player_preset_format_unsupported))
             val b = j.getJSONArray("bands")
-            require(b.length() in 1..31) { "バンド数は 1〜31 です" }
+            if (b.length() !in 1..31) throw UiTextException(uiText(R.string.player_band_count_invalid))
             fun finite(v: Double, min: Float, max: Float): Float {
-                require(v.isFinite() && v >= min && v <= max) { "設定値が範囲外です" }
+                if (!v.isFinite() || v < min || v > max) throw UiTextException(uiText(R.string.player_setting_out_of_range))
                 return v.toFloat()
             }
             return EqConfig(
@@ -68,9 +72,9 @@ data class EqConfig(
             val preampRegex = Regex("Preamp:\\s*$number\\s*dB", RegexOption.IGNORE_CASE)
             val filterRegex = Regex("Filter\\s+\\d+:\\s*ON\\s+PK\\s+Fc\\s+$number\\s*Hz\\s+Gain\\s+$number\\s*dB\\s+Q\\s+$number", RegexOption.IGNORE_CASE)
             val active = text.lineSequence().map { it.trim() }.filter { Regex("^Filter\\s+\\d+:\\s*ON\\b", RegexOption.IGNORE_CASE).containsMatchIn(it) }.toList()
-            require(active.isNotEmpty() && active.size <= 31) { "ON の PK フィルターが 1〜31 個必要です" }
+            if (active.isEmpty() || active.size > 31) throw UiTextException(uiText(R.string.player_pk_count_invalid))
             val bands = active.map { line ->
-                val m = filterRegex.matchEntire(line) ?: error("この版は PK フィルターのみ対応しています: $line")
+                val m = filterRegex.matchEntire(line) ?: throw UiTextException(uiText(R.string.player_pk_only, UiText.Literal(line)))
                 EqBand(m.groupValues[1].toFloat(), m.groupValues[2].toFloat(), m.groupValues[3].toFloat())
             }
             val preamp = preampRegex.find(text)?.groupValues?.get(1)?.toFloat() ?: -6f

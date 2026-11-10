@@ -1,0 +1,8 @@
+<resources>
+    <string name="external_service_select_apps">外部EQを有効にする前に、対象アプリを1つ以上選択してください。</string>
+    <string name="external_service_not_selected">接続する前に、このアプリを選択して保存してください。</string>
+    <string name="external_service_start_failed">外部EQの待ち受けを開始できませんでした。Rust EQを開いて再試行してください。</string>
+    <string name="external_service_stop_failed">外部EQの待ち受けを停止できませんでした。</string>
+    <string name="external_service_waiting">このアプリから対応する音声セッションの通知を待っています。対象アプリで再生を開始してください。セッションを通知しないアプリには接続できません。</string>
+    <string name="external_service_invalid_session">この音声セッションに接続できませんでした。選択済みアプリの有効な非ゼロセッションのみ対応しています。</string>
+</resources>

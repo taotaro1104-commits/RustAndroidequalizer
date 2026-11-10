@@ -18,14 +18,14 @@ import kotlinx.coroutines.flow.first
 
 data class PlayerState(
     val config: EqConfig = EqConfig(), val selected: Int = 0,
-    val title: String = "音楽を選んで、音を整える", val loading: Boolean = false,
+    val title: UiText = uiText(R.string.player_choose_audio), val loading: Boolean = false,
     val loaded: Boolean = false, val playing: Boolean = false, val finished: Boolean = false,
-    val metrics: List<Float> = List(14) { 0f }, val message: String? = null,
+    val metrics: List<Float> = List(14) { 0f }, val message: UiText? = null,
     val presetNames: List<String> = emptyList(),
     val spatialSettings: SpatialSettings = SpatialSettings(),
     val preparingEffect: Boolean = false, val effectLatencyMs: Float = 0f,
     val queueSize: Int = 0, val queueIndex: Int = 0,
-    val optimizing: Boolean = false, val optimizationReport: String? = null,
+    val optimizing: Boolean = false, val optimizationReport: UiText? = null,
     val presetTitle: String? = null,
 )
 
@@ -86,19 +86,19 @@ class PlayerController(private val app: Application) {
                                 cpuStrikes = 0
                                 if (settings.quality > 0) {
                                     spatial { it.copy(quality = it.quality-1) }
-                                    mutable.update { it.copy(message = "再生の安定性を保つため、音響処理の負荷を下げました。") }
+                                    mutable.update { it.copy(message = uiText(R.string.player_effect_load_reduced)) }
                                 } else {
                                     spatial { it.copy(hrtf = false, reverb = 0) }
-                                    mutable.update { it.copy(message = "音響処理が再生の期限を超えたため、HRTF とリバーブを停止しました。") }
+                                    mutable.update { it.copy(message = uiText(R.string.player_effects_stopped)) }
                                 }
                             }
                         } else cpuStrikes = 0
                         if (metrics[9] > .5f) {
-                            mutable.update { it.copy(playing = false, message = "音声出力が切断されました。再生ボタンで接続し直せます。") }
+                            mutable.update { it.copy(playing = false, message = uiText(R.string.player_output_disconnected)) }
                         }
                     }
                     val error = native { nativeEngine.error() }
-                    if (error.isNotBlank()) { pause(); mutable.update { it.copy(message = error) } }
+                    if (error.isNotBlank()) { pause(); mutable.update { it.copy(message = IllegalStateException(error).asUiText(R.string.player_playback_failed)) } }
                 }
             }
         }
@@ -173,10 +173,10 @@ class PlayerController(private val app: Application) {
                 val title = withContext(Dispatchers.IO) {
                     app.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
                         if (it.moveToFirst()) it.getString(0) else null
-                    } ?: uri.lastPathSegment ?: "Local audio"
+                    } ?: uri.lastPathSegment
                 }
                 // SAF files are copied once; Rust performs all decode/PCM/SRC work.
-                val extension = title.substringAfterLast('.', "bin").lowercase().takeIf { it.matches(Regex("[a-z0-9]{1,6}")) } ?: "bin"
+                val extension = title?.substringAfterLast('.', "bin")?.lowercase()?.takeIf { it.matches(Regex("[a-z0-9]{1,6}")) } ?: "bin"
                 val destination = withContext(Dispatchers.IO) {
                     val target = File.createTempFile("track-", ".$extension", app.cacheDir)
                     try {
@@ -186,10 +186,10 @@ class PlayerController(private val app: Application) {
                                 currentCoroutineContext().ensureActive()
                                 val n = input.read(buffer); if (n < 0) break
                                 total += n
-                                require(total <= 1024L * 1024 * 1024) { "ファイルは 1 GB 以下にしてください" }
+                                if (total > 1024L * 1024 * 1024) throw UiTextException(uiText(R.string.player_audio_too_large))
                                 output.write(buffer, 0, n)
                             }
-                        } } ?: error("ファイルを開けませんでした")
+                        } } ?: throw UiTextException(uiText(R.string.player_file_open_failed))
                         target
                     } catch (e: Exception) { target.delete(); throw e }
                 }
@@ -198,11 +198,11 @@ class PlayerController(private val app: Application) {
                 lastPath?.let { File(it).delete() }
                 lastPath = destination.absolutePath; lastWasDemo = false
                 val loadedMetrics = native { nativeEngine.metrics().toList() }
-                mutable.update { it.copy(title = title, loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f) }
+                mutable.update { it.copy(title = title?.let { name -> UiText.Literal(name) } ?: uiText(R.string.player_local_audio), loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f) }
                 startWithFocus()
             }.onFailure { error ->
                 if (error is CancellationException) throw error
-                mutable.update { it.copy(message = error.message ?: "読み込みに失敗しました", loaded = false, playing = false) }
+                mutable.update { it.copy(message = error.asUiText(R.string.player_load_failed), loaded = false, playing = false) }
             }
             mutable.update { it.copy(loading = false) }; dirty = true
             sourceRevision++; scheduleEffect()
@@ -219,9 +219,9 @@ class PlayerController(private val app: Application) {
             if (error.isBlank()) {
                 lastPath?.let { File(it).delete() }; lastPath = null; lastWasDemo = true
                 val loadedMetrics = native { nativeEngine.metrics().toList() }
-                mutable.update { it.copy(title = "Stereo demo · 60 seconds", loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f) }
+                mutable.update { it.copy(title = uiText(R.string.player_demo_title), loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f) }
                 startWithFocus()
-            } else mutable.update { it.copy(message = error, loaded = false) }
+            } else mutable.update { it.copy(message = IllegalStateException(error).asUiText(R.string.player_load_failed), loaded = false) }
             mutable.update { it.copy(loading = false) }; dirty = true
             sourceRevision++; scheduleEffect()
         }
@@ -235,7 +235,7 @@ class PlayerController(private val app: Application) {
         sourceJob = viewModelScope.launch {
             if (s.finished || s.metrics[9] > .5f) {
                 val error = native { nativeEngine.load(if (lastWasDemo) null else lastPath) }
-                if (error.isNotBlank()) { mutable.update { it.copy(message = error) }; return@launch }
+                if (error.isNotBlank()) { mutable.update { it.copy(message = IllegalStateException(error).asUiText(R.string.player_load_failed)) }; return@launch }
                 dirty = true
                 sourceRevision++; scheduleEffect()
             }
@@ -253,7 +253,7 @@ class PlayerController(private val app: Application) {
             if (error.isEmpty()) {
                 mutable.update { it.copy(finished = false) }
                 if (before.playing) startWithFocus()
-            } else mutable.update { it.copy(message = error, loaded = false, playing = false) }
+            } else mutable.update { it.copy(message = IllegalStateException(error).asUiText(R.string.player_seek_failed), loaded = false, playing = false) }
             mutable.update { it.copy(loading = false) }; dirty = true; scheduleEffect()
         }
     }
@@ -268,14 +268,14 @@ class PlayerController(private val app: Application) {
             } catch (e: Exception) {
                 if (e is CancellationException && e !is TimeoutCancellationException) throw e
                 native { nativeEngine.setPlaying(false) }
-                mutable.update { it.copy(playing = false, message = e.message ?: "再生サービスを開始できませんでした") }
+                mutable.update { it.copy(playing = false, message = e.asUiText(R.string.player_service_start_failed)) }
                 return
             }
         }
         if (audio.requestAudioFocus(focus) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             native { nativeEngine.setPlaying(true) }; mutable.update { it.copy(playing = true, message = null) }
         } else {
-            native { nativeEngine.setPlaying(false) }; mutable.update { it.copy(playing = false, message = "音声フォーカスを取得できませんでした") }
+            native { nativeEngine.setPlaying(false) }; mutable.update { it.copy(playing = false, message = uiText(R.string.player_audio_focus_failed)) }
         }
     }
     private suspend fun pauseNow() { native { nativeEngine.setPlaying(false) }; audio.abandonAudioFocusRequest(focus); mutable.update { it.copy(playing = false) } }
@@ -312,8 +312,8 @@ class PlayerController(private val app: Application) {
             var token = 0L
             try {
                 val rate = native { nativeEngine.metrics()[0].toInt() }
-                val ir = when (settings.reverb) { 1 -> ""; 2 -> settings.irPath ?: error("先に IR ファイルを選んでください"); else -> null }
-                val sofa = if (settings.hrtf) settings.sofaPath ?: error("先に SOFA ファイルを選んでください") else null
+                val ir = when (settings.reverb) { 1 -> ""; 2 -> settings.irPath ?: throw UiTextException(uiText(R.string.player_choose_ir_first)); else -> null }
+                val sofa = if (settings.hrtf) settings.sofaPath ?: throw UiTextException(uiText(R.string.player_choose_sofa_first)) else null
                 withContext(effectDispatcher + NonCancellable) { token = nativeEngine.prepareEffect(rate, ir, sofa, settings.azimuth, settings.wet, settings.quality) }
                 ensureActive()
                 if (revision != sourceRevision) return@launch
@@ -323,12 +323,12 @@ class PlayerController(private val app: Application) {
                     ensureActive()
                     if (!installed) { installed = native { val accepted = nativeEngine.installEffect(token); if (accepted) token = 0L; accepted }; if (!installed) delay(20) }
                 }
-                check(installed) { "エフェクトを適用できませんでした。再生状態を確認してください。" }
+                if (!installed) throw UiTextException(uiText(R.string.player_effect_apply_failed))
                 token = 0
                 effectSettledAt = android.os.SystemClock.elapsedRealtime() + 1000
                 mutable.update { it.copy(effectLatencyMs = latency * 1000f / rate, preparingEffect = false) }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { ensureActive(); mutable.update { it.copy(preparingEffect = false, message = e.message ?: "エフェクトの準備に失敗しました。前の設定を維持します。") } }
+            catch (e: Exception) { ensureActive(); mutable.update { it.copy(preparingEffect = false, message = e.asUiText(R.string.player_effect_prepare_failed)) } }
             finally {
                 if (token != 0L) withContext(NonCancellable + Dispatchers.IO) { nativeEngine.releaseEffect(token) }
             }
@@ -341,7 +341,7 @@ class PlayerController(private val app: Application) {
                 val copied = withContext(Dispatchers.IO) {
                     val title = app.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
                         if (it.moveToFirst()) it.getString(0) else null
-                    } ?: if (isSofa) "HRTF.sofa" else "Impulse response"
+                    } ?: if (isSofa) "HRTF.sofa" else "IR.wav"
                     val ext = if (isSofa) "sofa" else title.substringAfterLast('.', "wav").lowercase().takeIf { it.matches(Regex("[a-z0-9]{1,6}")) } ?: "wav"
                     val file = File.createTempFile(if (isSofa) "hrtf-" else "ir-", ".$ext", app.cacheDir)
                     try {
@@ -352,24 +352,24 @@ class PlayerController(private val app: Application) {
                                 val n = input.read(bytes)
                                 if (n < 0) break
                                 total += n
-                                require(total <= 64*1024*1024) { "エフェクトファイルは 64 MB 以下にしてください" }
+                                if (total > 64*1024*1024) throw UiTextException(uiText(R.string.player_effect_too_large))
                                 output.write(bytes, 0, n)
                             }
-                        } } ?: error("ファイルを開けませんでした")
+                        } } ?: throw UiTextException(uiText(R.string.player_file_open_failed))
                         file.absolutePath to title
                     } catch (e: Exception) { file.delete(); throw e }
                 }
                 // Imported effect files are cache resources, never read on the audio callback.
                 if (isSofa) configure { it.copy(spatial = 0) }
                 spatial { if (isSofa) it.copy(sofaPath = copied.first, sofaName = copied.second, hrtf = true) else it.copy(irPath = copied.first, irName = copied.second, reverb = 2) }
-            }.onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.message) } }
+            }.onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.asUiText(R.string.player_effect_import_failed)) } }
         }
     }
 
     fun savePreset(name: String) {
         val clean = name.trim().take(40); if (clean.isEmpty()) return
         preferences.edit().putString("preset:$clean", mutable.value.config.toJson()).apply()
-        mutable.update { it.copy(presetNames = (it.presetNames + clean).distinct().sorted(), message = "「$clean」を保存しました") }
+        mutable.update { it.copy(presetNames = (it.presetNames + clean).distinct().sorted(), message = uiText(R.string.player_preset_saved, UiText.Literal(clean))) }
     }
     fun deletePreset(name: String) {
         preferences.edit().remove("preset:$name").apply()
@@ -380,15 +380,15 @@ class PlayerController(private val app: Application) {
         viewModelScope.launch {
             runCatching { withContext(Dispatchers.IO) {
                 app.contentResolver.openOutputStream(uri, "wt")?.bufferedWriter(Charsets.UTF_8)?.use { it.write(text) }
-                    ?: error("保存先を開けませんでした")
-            } }.onSuccess { mutable.update { it.copy(message = "EQ 設定を書き出しました") } }
-                .onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.message) } }
+                    ?: throw UiTextException(uiText(R.string.player_destination_open_failed))
+            } }.onSuccess { mutable.update { it.copy(message = uiText(R.string.player_profile_exported)) } }
+                .onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.asUiText(R.string.player_profile_export_failed)) } }
         }
     }
     fun applyPreset(name: String) {
         runCatching { EqConfig.fromJson(preferences.getString("preset:$name", "")!!) }
             .onSuccess { cfg -> configure { cfg }; select(0) }
-            .onFailure { e -> mutable.update { it.copy(message = e.message) } }
+            .onFailure { e -> mutable.update { it.copy(message = e.asUiText(R.string.player_preset_load_failed)) } }
     }
     fun importProfile(uri: Uri) {
         viewModelScope.launch {
@@ -397,13 +397,13 @@ class PlayerController(private val app: Application) {
                     val bytes = ByteArray(256 * 1024 + 1)
                     var used = 0
                     while (used < bytes.size) { val n = it.read(bytes, used, bytes.size - used); if (n < 0) break; used += n }
-                    require(used <= 256 * 1024) { "プロファイルが大きすぎます" }
+                    if (used > 256 * 1024) throw UiTextException(uiText(R.string.player_profile_too_large))
                     String(bytes, 0, used, Charsets.UTF_8)
-                } ?: error("プロファイルを開けませんでした") }
+                } ?: throw UiTextException(uiText(R.string.player_profile_open_failed)) }
                 val cfg = if (text.trimStart().startsWith("{")) EqConfig.fromJson(text) else EqConfig.fromAutoEq(text)
                 configure { cfg }; select(0)
-                mutable.update { it.copy(message = "${cfg.bands.size} バンドのプロファイルを読み込みました") }
-            }.onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.message) } }
+                mutable.update { it.copy(message = uiText(R.string.player_profile_imported, cfg.bands.size)) }
+            }.onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.asUiText(R.string.player_profile_import_failed)) } }
         }
     }
 
@@ -418,22 +418,31 @@ class PlayerController(private val app: Application) {
                         val bytes = ByteArray(512 * 1024 + 1)
                         var used = 0
                         while (used < bytes.size) { val count = input.read(bytes, used, bytes.size-used); if (count < 0) break; used += count }
-                        require(used <= 512 * 1024) { "測定 CSV は 512 KB 以下にしてください" }
+                        if (used > 512 * 1024) throw UiTextException(uiText(R.string.player_measurement_too_large))
                         String(bytes, 0, used, Charsets.UTF_8)
-                    } ?: error("測定ファイルを開けませんでした")
+                    } ?: throw UiTextException(uiText(R.string.player_measurement_open_failed))
                 }
                 val rate = mutable.value.metrics[0].toInt().takeIf { it in 32000..192000 } ?: 48000
                 val settings = withContext(effectDispatcher) { nativeEngine.optimize(text, bands, rate) }
                 ensureActive()
                 // A user edit made while fitting must never be silently overwritten.
-                check(mutable.value.config == original) { "最適化中に EQ が変更されたため、結果を適用しませんでした。もう一度実行してください。" }
+                if (mutable.value.config != original) throw UiTextException(uiText(R.string.player_optimization_changed))
                 val result = EqConfig.fromAutoEq(settings)
                 configure { it.copy(bands = result.bands, preamp = result.preamp) }; select(0)
-                mutable.update { it.copy(optimizationReport = settings.lineSequence().first().removePrefix("# "), message = "${result.bands.size} バンドの補正を生成しました。音量を下げて比較してください。") }
+                mutable.update { it.copy(optimizationReport = optimizationSummary(settings), message = uiQuantity(R.plurals.player_optimization_generated, result.bands.size, result.bands.size)) }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { mutable.update { it.copy(message = e.message ?: "最適化に失敗しました") } }
+            catch (e: Exception) { mutable.update { it.copy(message = e.asUiText(R.string.player_optimization_failed)) } }
             finally { mutable.update { it.copy(optimizing = false) } }
         }
+    }
+
+    private fun optimizationSummary(settings: String): UiText {
+        val header = settings.lineSequence().firstOrNull().orEmpty().removePrefix("# ")
+        val rmse = Regex("level-normalized shape RMSE: ([0-9.]+) -> ([0-9.]+) dB").find(header)
+        val before = rmse?.groupValues?.get(1)?.toDoubleOrNull()
+        val after = rmse?.groupValues?.get(2)?.toDoubleOrNull()
+        return if (before != null && after != null) uiText(R.string.player_optimization_summary, before, after)
+        else uiText(R.string.player_optimization_summary_fallback)
     }
 
     fun release() {
