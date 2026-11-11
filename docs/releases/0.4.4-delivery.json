@@ -1,0 +1,22 @@
+{
+  "version": "0.4.4",
+  "source_commit": "ad7b9cae52d4f4b82cc2926e01c6fcf4393117b8",
+  "source_files": 220,
+  "apk": {
+    "file": "dist/signed/rust-eq-0.4.4-release.apk",
+    "size_bytes": 15641135,
+    "sha256": "5ee4f7b471a1131d193c0c5d4819a7187e9f37903cde9bfc43a320f0bdd0f11f"
+  },
+  "package": {
+    "file": "dist/rust-eq-0.4.4-package.zip",
+    "size_bytes": 14163617,
+    "sha256": "96c0d4335ae552c98d123613b3840737ccd95f1f479441fb6989fb5da374a0cf"
+  },
+  "android_tests_passed": 37,
+  "unit_tests_passed": 9,
+  "rust_tests_passed": 35,
+  "actual_youtube_connection_verified": false,
+  "signed_silent_fixture_connection_verified": true,
+  "download_permission_setup": "adb shell pm grant dev.rusteq android.permission.DUMP",
+  "publication": "Source pushed to origin/main; APK and ZIP prepared locally. No Drive upload or website deployment was performed for 0.4.4."
+}

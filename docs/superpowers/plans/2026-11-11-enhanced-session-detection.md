@@ -46,7 +46,7 @@
 
 - [x] Run full unit/instrumentation tests, process recreation, localization, debug/release builds and lint. Request independent code review; address important findings.
 - [x] Build and sign a new release with the existing key; verify upgrade, alignment and package checksums. Record actual YouTube test scope honestly.
-- [ ] Update documentation, commit/push as previously authorized, and prepare the distribution package. Stop only the private test emulator.
+- [x] Update documentation, commit/push as previously authorized, and prepare the distribution package. Stop only the private test emulator.
 
 ## Execution ledger
 
@@ -59,3 +59,5 @@
 - Final review: independent reviewer inspected the source and identified the inactive-row prefix blocker; fixed and regression-tested. Follow-up found no further confirmed important issue. OEM dump differences and process-start/pipe behavior remain runtime limitations; current YouTube playback is not claimed verified.
 
 - Final verification: Android37, unit9, Rust35 and both real-process restoration phases passed. The signed update retained settings and controlled the silent fixture. See docs/releases/0.4.4.json; latest YouTube playback remains unverified. Delivery is the remaining step.
+
+- Delivery: implementation commit ad7b9cae52d4f4b82cc2926e01c6fcf4393117b8 pushed to main; versioned APK and source/license/verification ZIP verified. See docs/releases/0.4.4-delivery.json.
