@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.media.*;
 import android.media.audiofx.AudioEffect;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -12,6 +14,19 @@ public final class SessionPlayer extends Activity {
     private AudioTrack track;
     private AudioTrack secondTrack;
     private boolean announceSessions;
+    private MediaSession mediaSession;
+    private void mediaState(int state, long position) {
+        if (mediaSession != null) mediaSession.setPlaybackState(new PlaybackState.Builder()
+            .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE)
+            .setState(state, position, state == PlaybackState.STATE_PLAYING ? 1f : 0f).build());
+    }
+    private void metadata(Intent intent) {
+        if (mediaSession != null) mediaSession.setMetadata(new MediaMetadata.Builder()
+            .putString(MediaMetadata.METADATA_KEY_TITLE, intent.getStringExtra("metadata_title") == null ? "External music test title" : intent.getStringExtra("metadata_title"))
+            .putString(MediaMetadata.METADATA_KEY_ARTIST, "External test artist")
+            .putString(MediaMetadata.METADATA_KEY_ALBUM, "External test album")
+            .putLong(MediaMetadata.METADATA_KEY_DURATION, 125000).build());
+    }
     private void announce(String action) {
         if (!announceSessions) return;
         sendBroadcast(new Intent(action).putExtra(AudioEffect.EXTRA_AUDIO_SESSION, track.getAudioSessionId())
@@ -35,10 +50,21 @@ public final class SessionPlayer extends Activity {
             secondTrack.write(samples, 0, samples.length); secondTrack.setLoopPoints(0, frames, -1); secondTrack.play();
         }
         announce(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION);
+        if (getIntent().getBooleanExtra("publish_metadata", false)) {
+            mediaSession = new MediaSession(this, "RustEq external metadata fixture");
+            metadata(getIntent()); mediaState(PlaybackState.STATE_PLAYING, 15000); mediaSession.setActive(true);
+        }
         TextView text = new TextView(this); text.setText("Integration test player\nSession " + track.getAudioSessionId()); setContentView(text);
     }
-    @Override public void onNewIntent(Intent intent) { super.onNewIntent(intent); if ("STOP".equals(intent.getAction())) finish(); }
+    @Override public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if ("STOP".equals(intent.getAction())) finish();
+        if ("METADATA".equals(intent.getAction())) metadata(intent);
+        if ("PAUSE".equals(intent.getAction()) && track != null) { track.pause(); mediaState(PlaybackState.STATE_PAUSED, 20000); }
+        if ("RESUME".equals(intent.getAction()) && track != null) { track.play(); mediaState(PlaybackState.STATE_PLAYING, 20000); }
+    }
     @Override public void onDestroy() {
+        if (mediaSession != null) { mediaSession.setActive(false); mediaSession.release(); mediaSession = null; }
         if (track != null) { announce(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION); track.stop(); track.release(); track = null; }
         if (secondTrack != null) { secondTrack.stop(); secondTrack.release(); secondTrack = null; }
         super.onDestroy();

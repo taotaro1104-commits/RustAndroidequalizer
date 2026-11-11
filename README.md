@@ -28,6 +28,8 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 - 対象アプリを検索・複数選択して保存する「他アプリにもEQ」。未接続時の接続ボタン、再接続、端末再起動後の待ち受け復元に対応します。対応する非ゼロ音声セッションに Android Equalizer を接続する機能で、全アプリの system-wide Rust DSP ではありません（[範囲と使い方](docs/external-eq.md)）。
 - YouTubeなどがセッションを通知しない場合の「拡張検出」。任意の追加設定としてADBでDUMP権限を付与し、選択済みアプリの再生中セッションを探します。録音やrootは使いません（[設定方法](docs/external-eq.md#通知のないプレーヤーの拡張検出044)）。
 
+0.4.5から、選択したYouTube Musicなどの曲名・アーティスト・再生状態を「音づくり」と「ツール → 再生情報」に表示します。「再生情報の表示を設定」からAndroidの通知アクセスを許可してください。YouTube MusicとYouTubeは別の対象です。曲情報の取得とEQ接続は別々に表示します（[設定手順](docs/external-eq.md#他アプリの曲情報045)）。
+
 ## ビルド
 
 必要環境：Rust stable（検証環境 1.99.1）、JDK 17+、Android SDK 35、NDK **27.2.12479018**、CMake **3.22.1**、cargo-ndk **4.1.2**。依存の解決結果は `Cargo.lock` に固定しています。
@@ -87,7 +89,7 @@ JNI はソースを開く・設定する・再生制御・メトリクス取得�
 
 ## 現在の範囲と制限
 
-0.4.4 は **日本語・English / PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対象アプリの保存・対応セッションへの接続** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
+0.4.5 は **日本語・English / PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対象アプリの保存・対応セッションへの接続** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
 
 - 録音権限・ストレージ全体の読み取り権限・インターネット権限は要求しません。ファイルは Android の選択画面で指定します。
 - バックグラウンド再生には `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK` / `WAKE_LOCK` を使用します。MediaSession の通知のみを投稿します。

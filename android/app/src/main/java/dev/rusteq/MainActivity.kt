@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         (application as EqApplication).player.setForeground(true)
         ExternalEqController.restore(this)
+        (application as EqApplication).externalPlayback.refresh()
     }
 
     override fun onStop() {

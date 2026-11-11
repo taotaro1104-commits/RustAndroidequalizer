@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_info_listener_label">Rust EQ playback information</string>
+    <string name="external_info_heading">Playback in other apps</string>
+    <string name="external_info_choose">Select YouTube Music or another player in Tools → EQ for other apps. YouTube Music and YouTube are separate apps.</string>
+    <string name="external_info_permission">Allow notification access to display track titles and playback state. Only selected apps are shown. Notification bodies are not analyzed or saved.</string>
+    <string name="external_info_allow">Set up playback information access</string>
+    <string name="external_info_restricted">If Android blocks this setting, open App info → menu → Allow restricted settings. Notification access is separate from ordinary notification permission and DUMP setup.</string>
+    <string name="external_info_app_settings">Open App info</string>
+    <string name="external_info_settings_failed">Could not open Android settings. Open notification access from device settings.</string>
+    <string name="external_info_loading">Reading playback information…</string>
+    <string name="external_info_unavailable">Playback information is unavailable. Check notification access and refresh.</string>
+    <string name="external_info_no_session">No playback information from selected apps yet. Start a track, then refresh.</string>
+    <string name="external_info_no_title">Track title unavailable</string>
+    <string name="external_info_playing">Playing</string>
+    <string name="external_info_paused">Paused</string>
+    <string name="external_info_buffering">Buffering</string>
+    <string name="external_info_remote">Playing on another device · phone EQ does not apply</string>
+    <string name="external_info_eq_connected">EQ: connected to device EQ</string>
+    <string name="external_info_eq_bypass">EQ: bypassed</string>
+    <string name="external_info_eq_not_connected">EQ: not connected</string>
+    <string name="external_info_eq_only">EQ connection target · track information not received</string>
+    <string name="external_info_unknown_position">Position unavailable</string>
+    <string name="external_info_unknown_duration">Duration unavailable</string>
+    <string name="external_info_refresh">Refresh playback information</string>
+    <string name="external_info_local_heading">Rust EQ local playback measurements</string>
+    <string name="external_info_local_empty">No local track is loaded. Other apps use device EQ and are not included in Rust DSP measurements.</string>
+</resources>

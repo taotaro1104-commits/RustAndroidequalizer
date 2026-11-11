@@ -36,6 +36,7 @@ import kotlin.math.*
 fun AudioApp(vm: PlayerController) {
     val context = LocalContext.current
     val state by vm.state.collectAsStateWithLifecycle()
+    val externalSettings by (context.applicationContext as EqApplication).externalEqSettings.state.collectAsStateWithLifecycle()
     var page by rememberSaveable { mutableIntStateOf(0) }
     val scrolls = listOf(rememberScrollState(), rememberScrollState(), rememberScrollState())
     val pageState = rememberSaveableStateHolder()
@@ -91,6 +92,7 @@ fun AudioApp(vm: PlayerController) {
                 when (page) {
                     0 -> {
                         PlayerPanel(state, vm) { filePicker.launch(arrayOf("audio/*", "application/ogg")) }
+                        if (externalSettings.selectedPackages.isNotEmpty()) AudioPanel { ExternalPlaybackInfo(state.config.bypass) }
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 SectionTitle(stringResource(R.string.ui_preset_heading), Modifier.weight(1f))
@@ -324,12 +326,18 @@ private fun DiagnosticsPanel(state: PlayerState) {
     AudioPanel {
         TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) { Text(if (expanded) stringResource(R.string.ui_close_diagnostics) else stringResource(R.string.ui_open_diagnostics)); Spacer(Modifier.width(8.dp)); AudioIcon(AudioSymbol.Chevron) }
         if (expanded) {
+            ExternalPlaybackInfo(state.config.bypass)
+            HorizontalDivider(color=AudioColors.Line)
+            SectionTitle(stringResource(R.string.external_info_local_heading))
+            if (!state.loaded) Text(stringResource(R.string.external_info_local_empty),style=MaterialTheme.typography.bodySmall,color=AudioColors.Muted)
+            else {
             val m = state.metrics
             Text(stringResource(R.string.ui_sample_rate, m[0].toInt()), style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.ui_buffer_details, m[1].toInt(), m[2].toInt(), m[12].toInt()), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
             Text(stringResource(R.string.ui_dsp_details, timeBound(m[10]), timeBound(m[11])), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
             Text(stringResource(R.string.ui_underrun_details, m[3].toInt(), m[4].toInt()), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
             Text(stringResource(R.string.ui_timing_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
+            }
         }
     }
 }
@@ -385,7 +393,7 @@ internal fun AudioPanel(tint: Color = Color.White, content: @Composable ColumnSc
 }
 
 @Composable
-private fun SectionTitle(text: String, modifier: Modifier = Modifier) { Text(text, modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge) }
+internal fun SectionTitle(text: String, modifier: Modifier = Modifier) { Text(text, modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge) }
 
 @Composable
 private fun PanelHeading(title: String, description: String, symbol: AudioSymbol, color: Color = AudioColors.Blue) {

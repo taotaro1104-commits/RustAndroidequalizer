@@ -17,6 +17,9 @@
     <!-- Older Android versions use device-language resources; per-app language settings start at API 33. -->
     <application android:name=".EqApplication" android:label="@string/app_name" android:localeConfig="@xml/locales_config" tools:targetApi="33" android:icon="@mipmap/ic_launcher" android:theme="@style/AppTheme" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:supportsRtl="true">
         <service android:name=".PlaybackService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
+        <service android:name=".ExternalPlaybackListener" android:exported="true" android:label="@string/external_info_listener_label" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter>
+        </service>
         <receiver android:name=".ExternalEqRestoreReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

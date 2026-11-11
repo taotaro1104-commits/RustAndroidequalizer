@@ -1,0 +1,55 @@
+{
+  "file": "rust-eq-0.4.5-release.apk",
+  "version": "0.4.5",
+  "version_code": 9,
+  "size_bytes": 15686191,
+  "sha256": "2f3ed411cf6cf7dbced11e5f23f1eab8e5d050303c0977791929ead7dfb5acd5",
+  "certificate_sha256": "6d6162953d457d4568fb69b61e277188d8445ad6cb7c5c9f8531b2e63473e607",
+  "signatures": [
+    "v2",
+    "v3"
+  ],
+  "min_sdk": 29,
+  "target_sdk": 35,
+  "debuggable": false,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "supported_languages": [
+    "en",
+    "ja"
+  ],
+  "elf_libraries_16kb_aligned": 8,
+  "tested_android_api": 33,
+  "android_tests_passed": 42,
+  "android_tests_skipped": 0,
+  "unit_tests_passed": 15,
+  "rust_tests_passed": 35,
+  "actual_process_recreation_probe": "passed",
+  "debug_lint": "No issues found",
+  "release_lint": "No issues found",
+  "signed_upgrade": {
+    "external_title_and_artist_visible_in_signed_release": true,
+    "metadata_recovered_after_process_death": true,
+    "enhanced_opt_in_retained": true,
+    "silent_player_connected_in_signed_release": true,
+    "dump_granted_to_normal_app_uid": true,
+    "api": 33,
+    "upgrade_from_0_4_4": true,
+    "legacy_q_minimum_retained": true,
+    "legacy_frequency_roundoff_repaired": true,
+    "ten_band_curve_and_preamp_retained": true,
+    "saved_targets_and_enabled_retained": true,
+    "listener_foreground_after_background": true,
+    "legacy_seed_written_by_test_shell_only": true,
+    "app_requires_root": false
+  },
+  "actual_youtube_music_client_verified": false,
+  "verification_scope": "Separate-UID real Android MediaSession fixture. No current YouTube Music client or ARM64 hardware verification.",
+  "playback_info_permission": "User-granted Android notification listener access; separate from POST_NOTIFICATIONS and optional EQ DUMP setup.",
+  "external_pcm_capture": false,
+  "metadata_history_saved": false,
+  "notification_bodies_analyzed": false,
+  "initial_full_run": "41/42: existing queue auto-advance test failed once; unchanged isolated test passed. New settings UI test cleanup was corrected before the complete green rerun. Queue failure root cause was not established."
+}

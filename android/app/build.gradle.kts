@@ -19,8 +19,8 @@ android {
         applicationId = "dev.rusteq"
         minSdk = 29
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.4.4"
+        versionCode = 9
+        versionName = "0.4.5"
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         externalNativeBuild { cmake { arguments += "-DANDROID_STL=c++_shared" } }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

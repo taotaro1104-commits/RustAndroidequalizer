@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_info_listener_label">Rust EQの再生情報</string>
+    <string name="external_info_heading">他アプリの再生情報</string>
+    <string name="external_info_choose">「ツール → 他アプリにもEQ」でYouTube Musicなどの対象を選んでください。YouTube MusicとYouTubeは別のアプリです。</string>
+    <string name="external_info_permission">曲名や再生状態の表示には「通知へのアクセス」の許可が必要です。選択したアプリだけを表示し、通知本文の解析や保存は行いません。</string>
+    <string name="external_info_allow">再生情報の表示を設定</string>
+    <string name="external_info_restricted">Androidに設定を制限された場合は「アプリ情報 → メニュー → 制限付き設定を許可」を確認してください。「通知へのアクセス」は通常の通知許可やDUMPの設定とは別です。</string>
+    <string name="external_info_app_settings">アプリ情報を開く</string>
+    <string name="external_info_settings_failed">Androidの設定を開けませんでした。端末の設定から「通知へのアクセス」を開いてください。</string>
+    <string name="external_info_loading">再生情報を取得しています…</string>
+    <string name="external_info_unavailable">再生情報を取得できません。「通知へのアクセス」を確認して再読み込みしてください。</string>
+    <string name="external_info_no_session">選択したアプリの再生情報はまだ届いていません。曲を再生して再読み込みしてください。</string>
+    <string name="external_info_no_title">曲名を取得できません</string>
+    <string name="external_info_playing">再生中</string>
+    <string name="external_info_paused">一時停止</string>
+    <string name="external_info_buffering">読み込み中</string>
+    <string name="external_info_remote">他の端末で再生中 · この端末のEQは適用されません</string>
+    <string name="external_info_eq_connected">EQ：端末EQに接続済み</string>
+    <string name="external_info_eq_bypass">EQ：バイパス中</string>
+    <string name="external_info_eq_not_connected">EQ：未接続</string>
+    <string name="external_info_eq_only">EQの接続先 · 曲情報は未取得です</string>
+    <string name="external_info_unknown_position">再生位置は未取得</string>
+    <string name="external_info_unknown_duration">曲の長さは未取得</string>
+    <string name="external_info_refresh">再生情報を再読み込み</string>
+    <string name="external_info_local_heading">Rust EQ内の再生計測</string>
+    <string name="external_info_local_empty">アプリ内の音源は読み込まれていません。他アプリの音声は端末EQで処理し、Rust DSPの計測値には含まれません。</string>
+</resources>

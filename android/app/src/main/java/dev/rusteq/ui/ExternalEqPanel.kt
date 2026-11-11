@@ -181,7 +181,7 @@ internal fun ExternalEqPanel() {
                     else -> R.string.external_ui_waiting
                 }
                 Text(stringResource(status), style = MaterialTheme.typography.bodyMedium, color = if (attached) AudioColors.Green else AudioColors.Muted)
-                if (packageName == "com.google.android.youtube" && !attached) {
+                if (packageName in setOf("com.google.android.youtube","com.google.android.apps.youtube.music") && !attached) {
                     Text(stringResource(R.string.external_ui_youtube_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
                 }
                 sessions.forEach { session ->

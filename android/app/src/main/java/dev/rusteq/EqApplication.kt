@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 class EqApplication : Application() {
     private val settingsIo = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val externalEqSettings by lazy { dev.rusteq.audio.ExternalEqSettingsStore(this) }
+    val externalPlayback by lazy { dev.rusteq.audio.ExternalPlaybackMonitor(this,externalEqSettings.state) }
     val player by lazy { PlayerController(this) }
     val playbackServiceRunning = MutableStateFlow(false)
     val systemEqState = MutableStateFlow(dev.rusteq.audio.SystemEqState())
