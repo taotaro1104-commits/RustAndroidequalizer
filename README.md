@@ -26,6 +26,7 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 - foreground media playback service、MediaSession、通知からの再生・一時停止・次曲・停止。画面を閉じても再生を維持。
 - 音声フォーカス喪失・ヘッドホン切断時の一時停止。キューは選択済み URI の読み取り許可とともに復元。
 - 対象アプリを検索・複数選択して保存する「他アプリにもEQ」。未接続時の接続ボタン、再接続、端末再起動後の待ち受け復元に対応します。対応する非ゼロ音声セッションに Android Equalizer を接続する機能で、全アプリの system-wide Rust DSP ではありません（[範囲と使い方](docs/external-eq.md)）。
+- YouTubeなどがセッションを通知しない場合の「拡張検出」。任意の追加設定としてADBでDUMP権限を付与し、選択済みアプリの再生中セッションを探します。録音やrootは使いません（[設定方法](docs/external-eq.md#通知のないプレーヤーの拡張検出044)）。
 
 ## ビルド
 
@@ -86,18 +87,19 @@ JNI はソースを開く・設定する・再生制御・メトリクス取得�
 
 ## 現在の範囲と制限
 
-0.4.3 は **日本語・English / PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対象アプリの保存・対応セッションへの接続** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
+0.4.4 は **日本語・English / PEQ / 標準プリセット / 疑似BASS / Dynamics / HRTF / 長い IR / AutoEQ 最適化 / ローカル再生 / 対象アプリの保存・対応セッションへの接続** を実装しています。CPALは任意のdesktop再生バックエンドとして追加しました。Androidは引き続きOboeを使用します。AudioPlaybackCaptureと全アプリの出力を処理するglobal / root方式は未実装です。
 
 - 録音権限・ストレージ全体の読み取り権限・インターネット権限は要求しません。ファイルは Android の選択画面で指定します。
 - バックグラウンド再生には `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK` / `WAKE_LOCK` を使用します。MediaSession の通知のみを投稿します。
 - 他アプリ EQ の待ち受けを有効にする場合だけ、通常の継続通知のため通知権限を要求します。`MODIFY_AUDIO_SETTINGS`、Android 14+ の `FOREGROUND_SERVICE_SPECIAL_USE` と用途説明も宣言します。公開時の用途審査は別途必要です。
+- 拡張検出用の`DUMP`は任意のADB設定で付与します。通常の許可ダイアログでは付与できません。権限不足・形式の違い・時間切れを画面に表示し、検出結果や診断情報は保存しません。
 - 選択ファイルはアプリの cache へコピーします（上限 1 GB）。ネットワーク配信・DRM・3ch 以上・途中で sample rate が変わる音源は対象外です。
 - SOFA / IR は利用できる権利を持つファイルを選択してください。測定データはアプリに同梱していません。SOFA の保存形式によって読み込めないファイルもあります。
 - HRTF は固定の左右 2 スピーカー方式です。head tracking / 複数移動音源は対象外。SOFA の読み込みとフィルター抽出にローカル修正版 Sofar 0.4.0 を使用します（[差分](vendor/sofar/PATCHES.md)）。
 - IR は 8 秒以内、mono / stereo、エフェクトのファイルは 64 MB 以内。reverb tail 上限は Eco 0.25 秒 / Standard 2 秒 / Low latency 8 秒で、合成 IR の上限 768000 taps に収まるようにも短縮します。短縮時は末尾をフェードし、HRTF taps は保持します。
 - 品質に応じて partition は 512 / 256 / 128 frames。表示する遅延は **partition によるバッファ遅延** で、IR / HRTF データ自体の遅延と端末出力遅延を含みません。
 - callback p99 が period の 50% を継続して超えると品質を下げます。Eco でも period を継続して超える場合は HRTF / reverb を停止して通知します。実機の deadline 保証ではありません。
-- HRTF / IR ファイルと選択状態はセッション内で扱います。EQ プリセット・JSON に外部データは含めません。アプリプロセス終了後の曲再開はユーザーの再生操作が必要です。
+- 取り込んだHRTF / IRファイルはアプリの保存領域に置き、空間設定と選択状態も端末内に保存します。EQプリセット・JSONに外部データ自体は含めません。アプリプロセス終了後の曲再開はユーザーの再生操作が必要です。
 - limiter は lookahead なしの sample-peak 型です。true-peak 保証は行いません。bypass でも NaN 除去と ±0.999 の最終安全クリップは残ります。
 - response graph は PEQ + preamp の静的応答であり、疑似BASS / compressor / limiter / spatial の応答は含みません。
 - p95 / p99 は直近の native callback の処理時間を 100 µs 刻みで集計します。最終 bin は `≥12.8 ms` と表示します。厳密な deadline 判定には Perfetto を併用してください。

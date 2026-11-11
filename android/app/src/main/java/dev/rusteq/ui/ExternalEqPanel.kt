@@ -158,6 +158,7 @@ internal fun ExternalEqPanel() {
         if (settings.enabled && !state.running) {
             Button(onClick = { start() }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.external_ui_resume)) }
         }
+        EnhancedDetectionPanel(settings, state.discovery, refresh)
         if (catalog == null) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (catalog?.failed == true) Text(stringResource(R.string.external_ui_load_failed), style = MaterialTheme.typography.bodySmall, color = AudioColors.Bass)
         val knownApps = catalog?.apps.orEmpty().associateBy { it.packageName }

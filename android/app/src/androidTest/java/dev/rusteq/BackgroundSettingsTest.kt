@@ -174,7 +174,7 @@ class BackgroundSettingsTest {
                 app.player.applyPreset("__background_probe__")
                 app.player.select(9)
                 app.player.spatial { expectedSpatial }
-                app.externalEqSettings.update { it.copy(selectedPackages = expectedTargets, enabled = true, resumeAfterBoot = false) }
+                app.externalEqSettings.update { it.copy(selectedPackages = expectedTargets, enabled = true, resumeAfterBoot = false, enhancedDetection = true) }
                 ExternalEqController.start(app)
             }
             await { app.systemEqState.value.running }
@@ -197,6 +197,7 @@ class BackgroundSettingsTest {
         assertEquals(expectedTargets, external.selectedPackages)
         assertTrue(external.enabled)
         assertFalse(external.resumeAfterBoot)
+        assertTrue("Enhanced detection opt-in survives actual process recreation", external.enhancedDetection)
         val activity = instrument.startActivitySync(Intent(app, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         try { await { app.systemEqState.value.running } }
         finally {
@@ -206,7 +207,7 @@ class BackgroundSettingsTest {
                 app.player.configure { EqConfig() }
                 app.player.select(0)
                 app.player.deletePreset("__background_probe__")
-                app.externalEqSettings.update { it.copy(selectedPackages = emptySet(), enabled = false, resumeAfterBoot = true) }
+                app.externalEqSettings.update { it.copy(selectedPackages = emptySet(), enabled = false, resumeAfterBoot = true, enhancedDetection = false) }
                 activity.finish()
             }
         }

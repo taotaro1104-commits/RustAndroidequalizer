@@ -1,0 +1,60 @@
+{
+  "file": "rust-eq-0.4.4-release.apk",
+  "version": "0.4.4",
+  "version_code": 8,
+  "size_bytes": 15641135,
+  "sha256": "5ee4f7b471a1131d193c0c5d4819a7187e9f37903cde9bfc43a320f0bdd0f11f",
+  "certificate_sha256": "6d6162953d457d4568fb69b61e277188d8445ad6cb7c5c9f8531b2e63473e607",
+  "signatures": [
+    "v2",
+    "v3"
+  ],
+  "min_sdk": 29,
+  "target_sdk": 35,
+  "debuggable": false,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "supported_languages": [
+    "en",
+    "ja"
+  ],
+  "elf_libraries_16kb_aligned": 8,
+  "tested_android_api": 33,
+  "android_tests_passed": 37,
+  "android_tests_skipped": 0,
+  "unit_tests_passed": 9,
+  "rust_tests_passed": 35,
+  "android_test_seconds": 155.195,
+  "actual_process_recreation_probe": "passed",
+  "debug_lint": "No issues found",
+  "release_lint": "No issues found",
+  "signed_upgrade": {
+    "enhanced_opt_in_retained": true,
+    "silent_player_connected_in_signed_release": true,
+    "dump_granted_to_normal_app_uid": true,
+    "api": 33,
+    "upgrade_from_0_4_3": true,
+    "legacy_q_minimum_retained": true,
+    "legacy_frequency_roundoff_repaired": true,
+    "ten_band_curve_and_preamp_retained": true,
+    "saved_targets_and_enabled_retained": true,
+    "listener_foreground_after_background": true,
+    "legacy_seed_written_by_test_shell_only": true,
+    "app_requires_root": false
+  },
+  "actual_youtube_connection_verified": false,
+  "youtube_scope": "The factory YouTube 19.17.42 client previously stopped at a mandatory update screen. This release verifies a separate-UID non-announcing fixture on Android13; it does not claim current YouTube or OEM compatibility.",
+  "extra_permission_setup": "Opt-in plus adb shell pm grant dev.rusteq android.permission.DUMP",
+  "shizuku_setup_integrated": false,
+  "external_pcm_capture": false,
+  "test_environment_adjustments": {
+    "private_avd": "rusteq_fix13",
+    "reason": "System UI ANR dialog blocked UI tests; Google services previously produced independent ANRs. Rust EQ tests do not use Google APIs.",
+    "packages_originally_disabled": {
+      "com.google.android.googlequicksearchbox": false,
+      "com.google.android.gms": false
+    }
+  }
+}

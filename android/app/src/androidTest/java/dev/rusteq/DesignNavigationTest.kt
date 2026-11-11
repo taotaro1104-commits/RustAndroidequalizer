@@ -110,7 +110,17 @@ class DesignNavigationTest {
     private fun awaitState(message: String, condition: () -> Boolean) {
         val deadline = SystemClock.elapsedRealtime() + 15000
         while (!condition() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
-        assertTrue(message, condition())
+        if (!condition()) {
+            val app = instrument.targetContext.applicationContext as EqApplication
+            val labels = mutableListOf<String>()
+            fun collect(node: AccessibilityNodeInfo?) {
+                if (node==null) return
+                node.text?.toString()?.takeIf { it.isNotBlank() }?.let { labels += it }
+                for (i in 0 until node.childCount) collect(node.getChild(i))
+            }
+            collect(instrument.uiAutomation.rootInActiveWindow)
+            fail("$message; settings=${app.externalEqSettings.state.value}; state=${app.systemEqState.value}; screen=${labels.take(35)}")
+        }
     }
 
     @Test fun navigationAndVisualPresetSelectionPreserveSoundSettings() {
@@ -204,6 +214,44 @@ class DesignNavigationTest {
             runCatching { context.startActivity(Intent(player).setAction("STOP")) }
             context.unregisterReceiver(probe)
             manager.setComponentEnabledSetting(component, originalComponentState, android.content.pm.PackageManager.DONT_KILL_APP)
+            instrument.runOnMainSync { ExternalEqController.stop(context); activity.finish() }
+            app.externalEqSettings.update { saved }
+        }
+    }
+
+    @Test fun enhancedDetectionSetupSavesOptInAndCopiesTheAppCommand() {
+        val context = instrument.targetContext
+        val app = context.applicationContext as EqApplication
+        val saved = app.externalEqSettings.state.value
+        app.externalEqSettings.update { it.copy(enabled=false, enhancedDetection=false) }
+        instrument.runOnMainSync { ExternalEqController.stop(context) }
+        val activity = instrument.startActivitySync(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        try {
+            tap(context.getString(R.string.ui_tab_tools))
+            reveal(context.getString(R.string.discovery_heading))
+            fun switchNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+                if (node == null) return null
+                if (node.contentDescription?.toString() == context.getString(R.string.discovery_toggle_description)) return node
+                for (index in 0 until node.childCount) switchNode(node.getChild(index))?.let { return it }
+                return null
+            }
+            val toggle = switchNode(instrument.uiAutomation.rootInActiveWindow) ?: error("Enhanced detection switch is accessible")
+            assertTrue(toggle.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            awaitState("Enhanced detection opt-in is saved") { app.externalEqSettings.state.value.enhancedDetection }
+            if (find(instrument.uiAutomation.rootInActiveWindow, context.getString(R.string.discovery_copy)) == null) {
+                reveal(context.getString(R.string.discovery_setup))
+                tap(context.getString(R.string.discovery_setup))
+            }
+            awaitNode("adb shell pm grant dev.rusteq android.permission.DUMP")
+            tap(context.getString(R.string.discovery_copy))
+            val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+            var copied: String? = null
+            instrument.runOnMainSync { copied = clipboard.primaryClip?.getItemAt(0)?.text?.toString() }
+            assertEquals("adb shell pm grant dev.rusteq android.permission.DUMP", copied)
+            tap(context.getString(R.string.discovery_done))
+            assertTrue(dev.rusteq.audio.ExternalEqSettingsStore(context).state.value.enhancedDetection)
+            assertFalse("Setup alone must not start EQ", app.externalEqSettings.state.value.enabled)
+        } finally {
             instrument.runOnMainSync { ExternalEqController.stop(context); activity.finish() }
             app.externalEqSettings.update { saved }
         }

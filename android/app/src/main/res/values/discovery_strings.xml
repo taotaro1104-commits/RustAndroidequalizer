@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discovery_heading">Enhanced detection for YouTube and more</string>
+    <string name="discovery_toggle_description">Find playback that does not announce its audio session</string>
+    <string name="discovery_scope">Optional setup with ADB is required. Searches only for your selected apps and uses the device EQ. No audio is recorded.</string>
+    <string name="discovery_permission_missing">Setup required: DUMP permission has not been granted.</string>
+    <string name="discovery_listener_needed">Permission granted. Enable EQ for other apps and select a player to start searching.</string>
+    <string name="discovery_format_unsupported">This device’s audio information could not be read. Standard session notifications still work.</string>
+    <string name="discovery_timeout">The audio service did not respond in time. Detection will retry automatically.</string>
+    <string name="discovery_unavailable">Enhanced detection is unavailable. Check permission and try again.</string>
+    <string name="discovery_ready">Detection active. Start playback and check each app’s connection status below.</string>
+    <string name="discovery_scanning">Checking active audio sessions…</string>
+    <string name="discovery_setup">Set up enhanced detection</string>
+    <string name="discovery_refresh">Check permission and search again</string>
+    <string name="discovery_setup_steps">1. Enable USB debugging on your Android device.\n2. Connect to a computer with Android platform-tools and authorize debugging.\n3. Run this command on the computer, then return here and check again.</string>
+    <string name="discovery_setup_limits">This grants access to system diagnostic information. It does not grant audio capture or guarantee that a device’s EQ can process every playback route. Turning enhanced detection off stops its scans.</string>
+    <string name="discovery_copy">Copy command</string>
+    <string name="discovery_done">Done</string>
+</resources>

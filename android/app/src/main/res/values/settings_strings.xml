@@ -5,5 +5,5 @@
     <string name="external_service_save_failed">Could not save the app selection. Check the device’s available storage.</string>
     <string name="external_ui_starting">Starting the EQ listener…</string>
     <string name="external_ui_listener_start_timeout">The EQ listener did not start. Your choices are saved. Try Resume listener before opening the player.</string>
-    <string name="external_ui_youtube_hint">Opening YouTube alone does not apply EQ. Stop and reopen a video, then check for Connected to device EQ. Playback that sends no session notification cannot be processed.</string>
+    <string name="external_ui_youtube_hint">Opening YouTube alone does not apply EQ. If it stays disconnected, enable enhanced detection and complete its setup. Start playback, then check for Connected to device EQ.</string>
 </resources>

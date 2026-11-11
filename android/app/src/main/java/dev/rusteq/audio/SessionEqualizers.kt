@@ -10,7 +10,8 @@ import dev.rusteq.asUiText
 import dev.rusteq.uiText
 
 data class ExternalSession(val id: Int, val player: String, val bands: Int = 0, val status: UiText, val connected: Boolean = false)
-data class SystemEqState(val running: Boolean = false, val sessions: List<ExternalSession> = emptyList(), val message: UiText? = null)
+enum class DiscoveryStatus { OFF, PERMISSION_REQUIRED, SCANNING, READY, FORMAT_UNSUPPORTED, TIMED_OUT, UNAVAILABLE }
+data class SystemEqState(val running: Boolean = false, val sessions: List<ExternalSession> = emptyList(), val message: UiText? = null, val discovery: DiscoveryStatus = DiscoveryStatus.OFF)
 
 /** Control-thread only. Platform EQ on cooperating players' nonzero sessions.
  * No PCM capture, session-zero effect, or Rust dynamics/spatial processing. */
@@ -52,6 +53,10 @@ class SessionEqualizers(private val changed: (List<ExternalSession>) -> Unit) {
     }
     fun retainPackages(packages: Set<String>) {
         sessions.entries.filter { it.value.player !in packages }
+            .map { it.key to it.value.player }.forEach { (id, player) -> close(id, player) }
+    }
+    fun retainSessions(wanted: Map<Int, String>) {
+        sessions.entries.filter { wanted[it.key] != it.value.player }
             .map { it.key to it.value.player }.forEach { (id, player) -> close(id, player) }
     }
     fun close(id: Int, player: String) {

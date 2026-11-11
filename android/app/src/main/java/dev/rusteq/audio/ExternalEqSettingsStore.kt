@@ -10,6 +10,7 @@ data class ExternalEqSettings(
     val selectedPackages: Set<String> = emptySet(),
     val enabled: Boolean = false,
     val resumeAfterBoot: Boolean = true,
+    val enhancedDetection: Boolean = false,
 ) {
     val shouldRun: Boolean get() = enabled && selectedPackages.isNotEmpty()
 }
@@ -45,6 +46,7 @@ class ExternalEqSettingsStore(context: Context) {
             .putStringSet("selected_packages", packages)
             .putBoolean("enabled", normalized.enabled)
             .putBoolean("resume_after_boot", normalized.resumeAfterBoot)
+            .putBoolean("enhanced_detection", normalized.enhancedDetection)
             .apply()
         mutable.value = normalized
     }
@@ -58,6 +60,7 @@ class ExternalEqSettingsStore(context: Context) {
             selectedPackages = packages,
             enabled = preferences.getBoolean("enabled", false) && packages.isNotEmpty(),
             resumeAfterBoot = preferences.getBoolean("resume_after_boot", true),
+            enhancedDetection = preferences.getBoolean("enhanced_detection", false),
         )
     }
 }

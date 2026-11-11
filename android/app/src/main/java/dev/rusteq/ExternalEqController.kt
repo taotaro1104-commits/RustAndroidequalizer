@@ -48,6 +48,13 @@ object ExternalEqController {
         launch(context, Intent(context, SystemEqService::class.java).setAction(SystemEqService.START))
     }
 
+    fun refreshDiscovery(context: Context) {
+        val app = context.applicationContext as EqApplication
+        if (app.externalEqSettings.state.value.shouldRun) {
+            launch(context, Intent(context, SystemEqService::class.java).setAction(SystemEqService.SCAN))
+        }
+    }
+
     private fun launch(context: Context, intent: Intent): Boolean {
         val app = context.applicationContext as EqApplication
         return runCatching {

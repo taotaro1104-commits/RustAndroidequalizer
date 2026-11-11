@@ -5,5 +5,5 @@
     <string name="external_service_save_failed">対象アプリの設定を保存できませんでした。端末の空き容量を確認してください。</string>
     <string name="external_ui_starting">EQの待ち受けを開始しています…</string>
     <string name="external_ui_listener_start_timeout">EQの待ち受けを開始できませんでした。選択内容は保存されています。先に「待ち受けを再開」を試してください。</string>
-    <string name="external_ui_youtube_hint">YouTubeを開くだけではEQは有効になりません。動画を停止して開き直し、「端末EQに接続済み」の表示を確認してください。通知が届かない再生には適用できません。</string>
+    <string name="external_ui_youtube_hint">YouTubeを開くだけではEQは有効になりません。未接続が続く場合は「YouTubeなどの拡張検出」を有効にし、追加設定を行ってください。再生後に「端末EQに接続済み」の表示を確認してください。</string>
 </resources>

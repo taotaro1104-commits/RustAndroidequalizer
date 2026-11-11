@@ -7,12 +7,19 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.content.res.Configuration
 import android.media.audiofx.AudioEffect
+import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import dev.rusteq.audio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.channels.Channel
 
 /** User-started, opt-in listener. Only cooperating players' announced sessions
  * are attached. A notification and explicit stop action remain available. */
@@ -22,6 +29,7 @@ class SystemEqService : Service() {
         const val STOP = "dev.rusteq.SESSION_EQ_STOP"
         const val ATTACH = "dev.rusteq.SESSION_EQ_ATTACH"
         const val CONNECT_PACKAGE = "dev.rusteq.SESSION_EQ_CONNECT_PACKAGE"
+        const val SCAN = "dev.rusteq.SESSION_EQ_SCAN"
         const val EXTRA_TARGET_PACKAGE = "dev.rusteq.TARGET_PACKAGE"
         const val NOTIFICATION_ID = 1002
         private const val CHANNEL = "rusteq-external-eq"
@@ -34,6 +42,16 @@ class SystemEqService : Service() {
     private var started = false
     private var waitingPackage: String? = null
     private val observedSessions = linkedMapOf<Int, String>()
+    private var discoveredSessions: Map<Int, String> = emptyMap()
+    private val scanSettings = MutableStateFlow<ExternalEqSettings?>(null)
+    private val scanRequests = Channel<Unit>(Channel.CONFLATED)
+    private val discovery by lazy { AndroidSessionDiscovery(this) }
+    private val audioManager by lazy { getSystemService(AudioManager::class.java) }
+    private val playbackCallback = object : AudioManager.AudioPlaybackCallback() {
+        override fun onPlaybackConfigChanged(configs: MutableList<android.media.AudioPlaybackConfiguration>?) {
+            scanRequests.trySend(Unit)
+        }
+    }
     private val settings get() = runtime.externalEqSettings.state.value
     private val preferences by lazy { getSharedPreferences("eq", MODE_PRIVATE) }
     private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -54,7 +72,7 @@ class SystemEqService : Service() {
                 AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION -> {
                     // CLOSE must also work after a package was deselected.
                     if (observedSessions[id] == player) observedSessions.remove(id)
-                    equalizers.close(id, player)
+                    reconcileSessions()
                 }
             }
         }
@@ -77,15 +95,48 @@ class SystemEqService : Service() {
             addAction(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION)
         }, ContextCompat.RECEIVER_EXPORTED)
         preferences.registerOnSharedPreferenceChangeListener(preferenceListener)
+        audioManager.registerAudioPlaybackCallback(playbackCallback, Handler(Looper.getMainLooper()))
+        scope.launch {
+            scanSettings.collectLatest { snapshot ->
+                if (snapshot == null) return@collectLatest
+                while (isActive) {
+                    setDiscoveryStatus(DiscoveryStatus.SCANNING)
+                    val result = discovery.scan(snapshot.selectedPackages)
+                    // Both worker cancellation and this main-thread check prevent
+                    // an old scan from attaching after a stop or settings change.
+                    if (!started || settings != snapshot || scanSettings.value != snapshot) return@collectLatest
+                    when (result) {
+                        is SelectedSessionSnapshot.Success -> {
+                            if (discovery.hasPermission()) {
+                                discoveredSessions = result.sessions
+                                setDiscoveryStatus(DiscoveryStatus.READY)
+                            } else {
+                                discoveredSessions = emptyMap()
+                                setDiscoveryStatus(DiscoveryStatus.PERMISSION_REQUIRED)
+                            }
+                        }
+                        is SelectedSessionSnapshot.Failure -> {
+                            discoveredSessions = emptyMap()
+                            setDiscoveryStatus(when (result.reason) {
+                                DiscoveryFailure.PERMISSION -> DiscoveryStatus.PERMISSION_REQUIRED
+                                DiscoveryFailure.FORMAT -> DiscoveryStatus.FORMAT_UNSUPPORTED
+                                DiscoveryFailure.TIMEOUT -> DiscoveryStatus.TIMED_OUT
+                                else -> DiscoveryStatus.UNAVAILABLE
+                            })
+                        }
+                    }
+                    reconcileSessions()
+                    withTimeoutOrNull(3000) { scanRequests.receive() }
+                }
+            }
+        }
         scope.launch {
             runtime.externalEqSettings.state.collect { value ->
                 if (waitingPackage?.let { it !in value.selectedPackages } == true) clearWaitingMessage()
-                equalizers.retainPackages(if (value.shouldRun) value.selectedPackages else emptySet())
+                discoveredSessions = discoveredSessions.filterValues { it in value.selectedPackages }
                 if (started) {
                     if (!value.shouldRun) stopListener()
-                    else observedSessions.toMap().forEach { (id, player) ->
-                        if (player in value.selectedPackages) equalizers.open(id, player)
-                    }
+                    else { synchronizeDiscovery(); reconcileSessions() }
                 }
             }
         }
@@ -129,7 +180,8 @@ class SystemEqService : Service() {
         started = true
         waitingPackage = null
         runtime.systemEqState.value = runtime.systemEqState.value.copy(running = true, message = null)
-        equalizers.retainPackages(settings.selectedPackages)
+        synchronizeDiscovery()
+        reconcileSessions()
         when (intent?.action) {
             ATTACH -> {
                 val id = intent.getIntExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
@@ -141,6 +193,27 @@ class SystemEqService : Service() {
             CONNECT_PACKAGE -> connectPackage(intent)
         }
         return START_STICKY
+    }
+
+    private fun setDiscoveryStatus(status: DiscoveryStatus) {
+        runtime.systemEqState.update { it.copy(discovery = status) }
+    }
+
+    private fun synchronizeDiscovery() {
+        val snapshot = settings.takeIf { started && it.shouldRun && it.enhancedDetection }
+        scanSettings.value = snapshot
+        if (snapshot == null) {
+            discoveredSessions = emptyMap()
+            setDiscoveryStatus(DiscoveryStatus.OFF)
+        } else scanRequests.trySend(Unit)
+    }
+
+    private fun reconcileSessions() {
+        val wanted = if (started && settings.shouldRun) {
+            (observedSessions.filterValues { it in settings.selectedPackages } + discoveredSessions.filterValues { it in settings.selectedPackages })
+        } else emptyMap()
+        equalizers.retainSessions(wanted)
+        wanted.forEach { (id, player) -> equalizers.open(id, player) }
     }
 
     private fun setMessage(message: UiText) {
@@ -156,11 +229,10 @@ class SystemEqService : Service() {
                 val removable = observedSessions.entries.firstOrNull { it.value !in settings.selectedPackages }
                 if (removable == null) return false
                 observedSessions.remove(removable.key)
-                equalizers.close(removable.key, removable.value)
             }
-            observedSessions[id]?.let { equalizers.close(id, it) }
             observedSessions[id] = player
         }
+        if (attach) reconcileSessions()
         return !attach || player !in settings.selectedPackages || equalizers.open(id, player)
     }
 
@@ -174,7 +246,7 @@ class SystemEqService : Service() {
         if (id > 0 && intent.getStringExtra(AudioEffect.EXTRA_PACKAGE_NAME) == player) {
             observeSession(id, player, attach = false)
         }
-        val matching = observedSessions.filterValues { it == player }.keys.toList()
+        val matching = (observedSessions + discoveredSessions).filterValues { it == player }.keys.toList()
         if (matching.isEmpty()) {
             waitingPackage = player
             setMessage(uiText(R.string.external_service_waiting))
@@ -186,6 +258,7 @@ class SystemEqService : Service() {
     private fun stopListener() {
         clearWaitingMessage()
         started = false
+        synchronizeDiscovery()
         runtime.systemEqState.value = runtime.systemEqState.value.copy(running = false)
         equalizers.release()
         observedSessions.clear()
@@ -211,8 +284,10 @@ class SystemEqService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() {
         started = false
-        runtime.systemEqState.value = runtime.systemEqState.value.copy(running = false, sessions = emptyList())
+        synchronizeDiscovery()
+        runtime.systemEqState.value = runtime.systemEqState.value.copy(running = false, sessions = emptyList(), discovery = DiscoveryStatus.OFF)
         unregisterReceiver(receiver)
+        audioManager.unregisterAudioPlaybackCallback(playbackCallback)
         preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener)
         scope.cancel(); equalizers.release(); observedSessions.clear()
         super.onDestroy()

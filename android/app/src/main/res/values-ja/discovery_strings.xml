@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discovery_heading">YouTubeなどの拡張検出</string>
+    <string name="discovery_toggle_description">音声セッションを通知しない再生も探す</string>
+    <string name="discovery_scope">任意の機能です。ADBによる追加設定が必要です。選択したアプリだけを探し、端末EQを適用します。音声は録音しません。</string>
+    <string name="discovery_permission_missing">追加設定が必要です。DUMP権限がまだ許可されていません。</string>
+    <string name="discovery_listener_needed">権限は許可されています。「他アプリにもEQ」を有効にし、対象を選ぶと検出を開始します。</string>
+    <string name="discovery_format_unsupported">この端末の音声情報を読み取れませんでした。標準のセッション通知による接続は利用できます。</string>
+    <string name="discovery_timeout">音声サービスの応答が間に合いませんでした。自動で再試行します。</string>
+    <string name="discovery_unavailable">拡張検出を利用できません。権限を確認し、もう一度お試しください。</string>
+    <string name="discovery_ready">拡張検出中です。再生を始め、下にある対象アプリの接続状態を確認してください。</string>
+    <string name="discovery_scanning">再生中の音声セッションを確認しています…</string>
+    <string name="discovery_setup">拡張検出の設定方法</string>
+    <string name="discovery_refresh">権限を確認して再検出</string>
+    <string name="discovery_setup_steps">1. Android端末でUSBデバッグを有効にします。\n2. Android platform-toolsを用意したパソコンへ接続し、デバッグを許可します。\n3. パソコンで次のコマンドを実行してから、この画面で再確認してください。</string>
+    <string name="discovery_setup_limits">システムの診断情報を読む権限を付与します。音声の取り込みは許可せず、すべての再生経路へのEQ適用を保証するものでもありません。拡張検出をオフにすると探索を停止します。</string>
+    <string name="discovery_copy">コマンドをコピー</string>
+    <string name="discovery_done">閉じる</string>
+</resources>
