@@ -36,7 +36,7 @@
 ### 3. Validate and deliver
 
 - [x] Run relevant/full unit and Android tests, existing Rust suite, localization, debug/release builds and lint; request an independent code review.
-- [ ] Sign 0.4.5 using the existing key, verify release/upgrade behavior and alignment, prepare versioned ZIP and documentation, commit/push, verify hashes and stop only the private AVD.
+- [x] Sign 0.4.5 using the existing key, verify release/upgrade behavior and alignment, prepare versioned ZIP and documentation, commit/push, verify hashes and stop only the private AVD.
 
 ## Ledger
 
@@ -46,3 +46,5 @@
 - Ruling: Continue in the existing cached workspace on a feature branch, as authorized by the user's no-confirmation preference.
 
 - Review: independent read-only review found no confirmed blocking defect; callback, selection, revoke/regrant and settings-flow integration tests complete the requested coverage.
+
+- Delivery: implementation commit 781a4cab74a89cdb4f2049e835353a2d83c8001a pushed to main; versioned APK and source/license/verification ZIP verified. See docs/releases/0.4.5-delivery.json.

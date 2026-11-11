@@ -1,0 +1,23 @@
+{
+  "version": "0.4.5",
+  "source_commit": "781a4cab74a89cdb4f2049e835353a2d83c8001a",
+  "source_files": 233,
+  "apk": {
+    "file": "dist/signed/rust-eq-0.4.5-release.apk",
+    "size_bytes": 15686191,
+    "sha256": "2f3ed411cf6cf7dbced11e5f23f1eab8e5d050303c0977791929ead7dfb5acd5"
+  },
+  "package": {
+    "file": "dist/rust-eq-0.4.5-package.zip",
+    "size_bytes": 14196968,
+    "sha256": "0e27dd6480ced974cfc5552318a72ba7ef133c2f98c399a151376a62b244b812"
+  },
+  "android_tests_passed": 42,
+  "unit_tests_passed": 15,
+  "rust_tests_passed": 35,
+  "actual_youtube_music_client_verified": false,
+  "signed_external_metadata_verified": true,
+  "signed_silent_fixture_connection_verified": true,
+  "playback_info_permission_setup": "User-granted Android notification access; separate from optional EQ DUMP setup",
+  "publication": "Source pushed to origin/main; APK and ZIP prepared locally. No Drive upload or website deployment was performed for 0.4.5."
+}
