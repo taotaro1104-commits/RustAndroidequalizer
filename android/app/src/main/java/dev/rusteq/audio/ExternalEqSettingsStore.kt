@@ -49,6 +49,9 @@ class ExternalEqSettingsStore(context: Context) {
         mutable.value = normalized
     }
 
+    /** Drain pending writes on the IO scope without holding the UI update lock. */
+    fun flush(): Boolean = preferences.edit().commit()
+
     private fun read(): ExternalEqSettings {
         val packages = preferences.getStringSet("selected_packages", emptySet()).orEmpty().toSet()
         return ExternalEqSettings(

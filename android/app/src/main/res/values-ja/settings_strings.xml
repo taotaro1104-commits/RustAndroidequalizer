@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_settings_restore_failed">保存した音の設定の一部を読み込めませんでした。再生前に設定を確認してください。</string>
+    <string name="player_settings_save_failed">音の設定を保存できませんでした。端末の空き容量を確認してください。</string>
+    <string name="external_service_save_failed">対象アプリの設定を保存できませんでした。端末の空き容量を確認してください。</string>
+    <string name="external_ui_starting">EQの待ち受けを開始しています…</string>
+    <string name="external_ui_listener_start_timeout">EQの待ち受けを開始できませんでした。選択内容は保存されています。先に「待ち受けを再開」を試してください。</string>
+    <string name="external_ui_youtube_hint">YouTubeを開くだけではEQは有効になりません。動画を停止して開き直し、「端末EQに接続済み」の表示を確認してください。通知が届かない再生には適用できません。</string>
+</resources>

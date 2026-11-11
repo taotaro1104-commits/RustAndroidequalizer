@@ -32,6 +32,7 @@ class SystemEqService : Service() {
     private var updateJob: Job? = null
     private lateinit var equalizers: SessionEqualizers
     private var started = false
+    private var waitingPackage: String? = null
     private val observedSessions = linkedMapOf<Int, String>()
     private val settings get() = runtime.externalEqSettings.state.value
     private val preferences by lazy { getSharedPreferences("eq", MODE_PRIVATE) }
@@ -62,7 +63,10 @@ class SystemEqService : Service() {
         super.onCreate()
         updateNotificationChannel()
         equalizers = SessionEqualizers { sessions ->
-            runtime.systemEqState.value = runtime.systemEqState.value.copy(sessions = sessions)
+            val connected = waitingPackage?.let { player -> sessions.any { it.player == player && it.connected } } == true
+            runtime.systemEqState.value = runtime.systemEqState.value.copy(sessions = sessions,
+                message = if (connected) null else runtime.systemEqState.value.message)
+            if (connected) waitingPackage = null
             publishNotification()
         }
         readConfig()
@@ -75,6 +79,7 @@ class SystemEqService : Service() {
         preferences.registerOnSharedPreferenceChangeListener(preferenceListener)
         scope.launch {
             runtime.externalEqSettings.state.collect { value ->
+                if (waitingPackage?.let { it !in value.selectedPackages } == true) clearWaitingMessage()
                 equalizers.retainPackages(if (value.shouldRun) value.selectedPackages else emptySet())
                 if (started) {
                     if (!value.shouldRun) stopListener()
@@ -101,7 +106,7 @@ class SystemEqService : Service() {
         }
     }
     private fun readConfig() {
-        equalizers.update(runCatching { EqConfig.fromJson(preferences.getString("last", "")!!) }.getOrDefault(EqConfig()))
+        equalizers.update(SoundSettingsStore(preferences).read().config)
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == STOP) {
@@ -122,6 +127,7 @@ class SystemEqService : Service() {
             return START_NOT_STICKY
         }
         started = true
+        waitingPackage = null
         runtime.systemEqState.value = runtime.systemEqState.value.copy(running = true, message = null)
         equalizers.retainPackages(settings.selectedPackages)
         when (intent?.action) {
@@ -170,6 +176,7 @@ class SystemEqService : Service() {
         }
         val matching = observedSessions.filterValues { it == player }.keys.toList()
         if (matching.isEmpty()) {
+            waitingPackage = player
             setMessage(uiText(R.string.external_service_waiting))
         } else if (matching.map { equalizers.reconnect(it, player) }.any { !it }) {
             setMessage(uiText(R.string.external_service_invalid_session))
@@ -177,6 +184,7 @@ class SystemEqService : Service() {
     }
 
     private fun stopListener() {
+        clearWaitingMessage()
         started = false
         runtime.systemEqState.value = runtime.systemEqState.value.copy(running = false)
         equalizers.release()
@@ -184,6 +192,13 @@ class SystemEqService : Service() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
+    private fun clearWaitingMessage() {
+        waitingPackage = null
+        if (runtime.systemEqState.value.message == uiText(R.string.external_service_waiting)) {
+            runtime.systemEqState.value = runtime.systemEqState.value.copy(message = null)
+        }
+    }
+
     private fun notification(): Notification {
         val open = PendingIntent.getActivity(this, 1, Intent(this, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val stop = PendingIntent.getService(this, 1, Intent(this, SystemEqService::class.java).setAction(STOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

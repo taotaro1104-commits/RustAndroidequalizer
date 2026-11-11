@@ -52,8 +52,11 @@ data class EqConfig(
             val b = j.getJSONArray("bands")
             if (b.length() !in 1..31) throw UiTextException(uiText(R.string.player_band_count_invalid))
             fun finite(v: Double, min: Float, max: Float): Float {
-                if (!v.isFinite() || v < min || v > max) throw UiTextException(uiText(R.string.player_setting_out_of_range))
-                return v.toFloat()
+                // JSON uses doubles; validate in the same float domain as the
+                // sliders and DSP so 0.1 does not compare below 0.1f.
+                val rounded = v.toFloat()
+                if (!v.isFinite() || !rounded.isFinite() || rounded < min || rounded > max) throw UiTextException(uiText(R.string.player_setting_out_of_range))
+                return rounded
             }
             return EqConfig(
                 bands = List(b.length()) { i -> val a = b.getJSONArray(i); EqBand(finite(a.getDouble(0), 10f, 20000f), finite(a.getDouble(1), -24f, 24f), finite(a.getDouble(2), .1f, 18f)) },

@@ -1,0 +1,57 @@
+{
+  "file": "rust-eq-0.4.3-release.apk",
+  "version": "0.4.3",
+  "version_code": 7,
+  "size_bytes": 15579695,
+  "sha256": "0b00be4665717b4deb4064ffb35f5815748c619d37ffa77d570e27ce5b74a37c",
+  "certificate_sha256": "6d6162953d457d4568fb69b61e277188d8445ad6cb7c5c9f8531b2e63473e607",
+  "signatures": [
+    "v2",
+    "v3"
+  ],
+  "min_sdk": 29,
+  "target_sdk": 35,
+  "debuggable": false,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "supported_languages": [
+    "en",
+    "ja"
+  ],
+  "elf_libraries_16kb_aligned": 8,
+  "tested_android_api": 33,
+  "android_tests_passed": 31,
+  "android_tests_skipped": 0,
+  "android_test_seconds": 90.988,
+  "actual_process_recreation_probe": "passed",
+  "debug_lint": "No issues found",
+  "release_lint": "No issues found",
+  "signed_upgrade": {
+    "api": 33,
+    "upgrade_from_0_4_2": true,
+    "legacy_q_minimum_retained": true,
+    "legacy_frequency_roundoff_repaired": true,
+    "ten_band_curve_and_preamp_retained": true,
+    "saved_targets_and_enabled_retained": true,
+    "listener_foreground_after_background": true,
+    "legacy_seed_written_by_test_shell_only": true,
+    "app_requires_root": false
+  },
+  "youtube_runtime": {
+    "api": 33,
+    "youtube_version": "19.17.42",
+    "launch_output": "Starting: Intent { act=android.intent.action.VIEW dat=https://www.youtube.com/... pkg=com.google.android.youtube }\nStatus: ok\nLaunchState: COLD\nActivity: com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity\nTotalTime: 9268\nWaitTime: 9298\nComplete\n",
+    "visible_labels": [
+      "Update your app",
+      "An update is available with new features, a faster experience, fixes, and more. It typically takes less than 1 minute.",
+      "UPDATE"
+    ],
+    "listener_stays_foreground": true,
+    "actual_eq_connection_verified": false,
+    "note": "Playback and EQ state require inspection; an app launch alone is not evidence of an audio connection.",
+    "playback_verified": false,
+    "reason": "The factory YouTube 19.17.42 client displayed a mandatory update screen. Video playback and YouTube EQ attachment could not be exercised. This does not establish compatibility of the user device or current YouTube versions."
+  }
+}

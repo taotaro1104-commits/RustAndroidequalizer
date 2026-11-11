@@ -33,12 +33,19 @@ class PlayerController(private val app: Application) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val nativeEngine by lazy { NativeEngine() }
     private val preferences = app.getSharedPreferences("eq", Context.MODE_PRIVATE)
+    private val soundSettings = SoundSettingsStore(preferences)
+    private val restoredSound = soundSettings.read()
+    private var requestedSpatial = restoredSound.spatial
     private var queue: List<Uri> = runCatching { val a = org.json.JSONArray(preferences.getString("queue", "[]")); List(a.length()) { Uri.parse(a.getString(it)) } }.getOrDefault(emptyList())
     private var queueIndex = preferences.getInt("queueIndex", 0).coerceIn(0, (queue.size-1).coerceAtLeast(0))
     private val audio = app.getSystemService(AudioManager::class.java)
     private val nativeLock = kotlinx.coroutines.sync.Mutex()
     private val mutable = MutableStateFlow(PlayerState(
-        config = runCatching { EqConfig.fromJson(preferences.getString("last", "")!!) }.getOrDefault(EqConfig()),
+        config = restoredSound.config,
+        spatialSettings = restoredSound.spatial,
+        presetTitle = restoredSound.presetTitle,
+        selected = restoredSound.selectedBand,
+        message = if (restoredSound.restoreFailed) uiText(R.string.player_settings_restore_failed) else null,
         presetNames = preferences.all.keys.filter { it.startsWith("preset:") }.map { it.removePrefix("preset:") }.sorted(),
         queueSize = queue.size, queueIndex = queueIndex,
     ))
@@ -85,10 +92,10 @@ class PlayerController(private val app: Application) {
                             if (cpuStrikes >= if (settings.quality == 0) 5 else 3) {
                                 cpuStrikes = 0
                                 if (settings.quality > 0) {
-                                    spatial { it.copy(quality = it.quality-1) }
+                                    adaptSpatialForLoad { it.copy(quality = it.quality-1) }
                                     mutable.update { it.copy(message = uiText(R.string.player_effect_load_reduced)) }
                                 } else {
-                                    spatial { it.copy(hrtf = false, reverb = 0) }
+                                    adaptSpatialForLoad { it.copy(hrtf = false, reverb = 0) }
                                     mutable.update { it.copy(message = uiText(R.string.player_effects_stopped)) }
                                 }
                             }
@@ -112,7 +119,19 @@ class PlayerController(private val app: Application) {
     fun configure(change: (EqConfig) -> EqConfig) {
         presetRevision++
         mutable.update { it.copy(config = change(it.config), presetTitle = null) }; dirty = true
-        preferences.edit().putString("last", mutable.value.config.toJson()).apply()
+        persistSoundSettings()
+    }
+
+    private fun persistSoundSettings() {
+        val value = mutable.value
+        soundSettings.save(value.config, requestedSpatial, value.presetTitle, value.selected)
+    }
+
+    /** Drain asynchronous preference saves from the application IO scope. */
+    fun flushPendingSettings() {
+        if (!soundSettings.flush()) {
+            mutable.update { it.copy(message = uiText(R.string.player_settings_save_failed)) }
+        }
     }
 
     fun applyBuiltinPreset(id: String) {
@@ -121,15 +140,19 @@ class PlayerController(private val app: Application) {
         viewModelScope.launch {
             val config = withContext(Dispatchers.Default) { preset.config }
             if (revision != presetRevision) return@launch
-            configure { config }; select(0)
-            mutable.update { it.copy(presetTitle = preset.title) }
+            mutable.update { it.copy(config = config, selected = 0, presetTitle = preset.title) }
+            dirty = true
+            persistSoundSettings()
         }
     }
 
-    fun select(index: Int) { mutable.update { it.copy(selected = index.coerceIn(0, it.config.bands.lastIndex)) } }
+    fun select(index: Int) {
+        mutable.update { it.copy(selected = index.coerceIn(0, it.config.bands.lastIndex)) }
+        persistSoundSettings()
+    }
     fun band(hz: Float? = null, db: Float? = null, q: Float? = null) {
         val selected = mutable.value.selected
-        configure { c -> c.copy(bands = c.bands.mapIndexed { i, b -> if (i == selected) b.copy(hz = hz ?: b.hz, db = db ?: b.db, q = q ?: b.q) else b }) }
+        configure { c -> c.copy(bands = c.bands.mapIndexed { i, b -> if (i == selected) b.copy(hz = hz?.coerceIn(10f, 20000f) ?: b.hz, db = db ?: b.db, q = q ?: b.q) else b }) }
     }
 
     fun bandCount(count: Int) {
@@ -280,7 +303,15 @@ class PlayerController(private val app: Application) {
     }
     private suspend fun pauseNow() { native { nativeEngine.setPlaying(false) }; audio.abandonAudioFocusRequest(focus); mutable.update { it.copy(playing = false) } }
     fun pause() { viewModelScope.launch { pauseNow() } }
-    fun setForeground(value: Boolean) { foreground = value }
+    fun setForeground(value: Boolean) {
+        val wasForeground = foreground
+        foreground = value
+        if (!value) persistSoundSettings()
+        else if (!wasForeground && mutable.value.spatialSettings != requestedSpatial) {
+            mutable.update { it.copy(spatialSettings = requestedSpatial) }
+            scheduleEffect()
+        }
+    }
     fun resumeFromNotification() { if (mutable.value.loaded && !mutable.value.playing) togglePlay() }
     fun stopPlayback() {
         sourceJob?.cancel(); effectJob?.cancel(); sourceRevision++
@@ -294,9 +325,17 @@ class PlayerController(private val app: Application) {
     fun dismissMessage() { mutable.update { it.copy(message = null) } }
 
     fun spatial(change: (SpatialSettings) -> SpatialSettings) {
-        val next = change(mutable.value.spatialSettings)
-        if (next == mutable.value.spatialSettings) return
+        val next = change(requestedSpatial)
+        if (next == requestedSpatial && next == mutable.value.spatialSettings) return
+        requestedSpatial = next
         mutable.update { it.copy(spatialSettings = next) }
+        persistSoundSettings()
+        scheduleEffect()
+    }
+
+    /** Performance protection changes the current effect, never the user's saved profile. */
+    private fun adaptSpatialForLoad(change: (SpatialSettings) -> SpatialSettings) {
+        mutable.update { it.copy(spatialSettings = change(it.spatialSettings)) }
         scheduleEffect()
     }
 
@@ -343,7 +382,9 @@ class PlayerController(private val app: Application) {
                         if (it.moveToFirst()) it.getString(0) else null
                     } ?: if (isSofa) "HRTF.sofa" else "IR.wav"
                     val ext = if (isSofa) "sofa" else title.substringAfterLast('.', "wav").lowercase().takeIf { it.matches(Regex("[a-z0-9]{1,6}")) } ?: "wav"
-                    val file = File.createTempFile(if (isSofa) "hrtf-" else "ir-", ".$ext", app.cacheDir)
+                    val directory = File(app.filesDir, "effects")
+                    check(directory.isDirectory || directory.mkdirs())
+                    val file = File.createTempFile(if (isSofa) "hrtf-" else "ir-", ".$ext", directory)
                     try {
                         app.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { output ->
                             val bytes = ByteArray(65536); var total = 0
@@ -359,9 +400,17 @@ class PlayerController(private val app: Application) {
                         file.absolutePath to title
                     } catch (e: Exception) { file.delete(); throw e }
                 }
-                // Imported effect files are cache resources, never read on the audio callback.
+                // Saved profiles must not depend on evictable cache files.
+                val previous = if (isSofa) requestedSpatial.sofaPath else requestedSpatial.irPath
                 if (isSofa) configure { it.copy(spatial = 0) }
                 spatial { if (isSofa) it.copy(sofaPath = copied.first, sofaName = copied.second, hrtf = true) else it.copy(irPath = copied.first, irName = copied.second, reverb = 2) }
+                withContext(Dispatchers.IO) {
+                    previous?.let { path ->
+                        val old = File(path).canonicalFile
+                        val directory = File(app.filesDir, "effects").canonicalFile
+                        if (old.parentFile == directory && old.path != File(copied.first).canonicalPath) old.delete()
+                    }
+                }
             }.onFailure { e -> if (e is CancellationException) throw e; mutable.update { it.copy(message = e.asUiText(R.string.player_effect_import_failed)) } }
         }
     }
@@ -387,7 +436,12 @@ class PlayerController(private val app: Application) {
     }
     fun applyPreset(name: String) {
         runCatching { EqConfig.fromJson(preferences.getString("preset:$name", "")!!) }
-            .onSuccess { cfg -> configure { cfg }; select(0) }
+            .onSuccess { cfg ->
+                presetRevision++
+                mutable.update { it.copy(config = cfg, selected = 0, presetTitle = name) }
+                dirty = true
+                persistSoundSettings()
+            }
             .onFailure { e -> mutable.update { it.copy(message = e.asUiText(R.string.player_preset_load_failed)) } }
     }
     fun importProfile(uri: Uri) {

@@ -36,6 +36,25 @@ class ExternalEqPersistenceTest {
         } finally { app.externalEqSettings.update { saved } }
     }
 
+    @Test fun aLatePlayerSessionClearsTheWaitingMessage() {
+        val saved = app.externalEqSettings.state.value
+        app.externalEqSettings.update { it.copy(selectedPackages = setOf(fixture), enabled = false) }
+        val activity = instrument.startActivitySync(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        val player = Intent().setComponent(ComponentName(fixture, "$fixture.SessionPlayer")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            instrument.runOnMainSync { ExternalEqController.connect(context, fixture) }
+            await("Listener is waiting for the selected player") { app.systemEqState.value.running && app.systemEqState.value.message != null }
+            context.startActivity(player)
+            await("Player announces a compatible session") { app.systemEqState.value.sessions.any { it.player == fixture && it.connected } }
+            assertNull("A connected player must not keep showing the old waiting error", app.systemEqState.value.message)
+        } finally {
+            runCatching { context.startActivity(Intent(player).setAction("STOP")) }
+            instrument.runOnMainSync { ExternalEqController.stop(context); activity.finish() }
+            await("Cleanup stops listener") { !app.systemEqState.value.running }
+            app.externalEqSettings.update { saved }
+        }
+    }
+
     @Test fun liveSelectionReleasesEffectsAndTapConnectReattachesOnlySelectedApp() {
         val saved = app.externalEqSettings.state.value
         app.externalEqSettings.update { it.copy(selectedPackages = setOf("dev.other.saved"), enabled = false) }

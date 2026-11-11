@@ -28,7 +28,7 @@ class DesignNavigationTest {
     }
 
     private fun awaitNode(label: String): AccessibilityNodeInfo {
-        val deadline = SystemClock.elapsedRealtime() + 5000
+        val deadline = SystemClock.elapsedRealtime() + if (Build.VERSION.SDK_INT == 33) 60000 else 5000
         while (SystemClock.elapsedRealtime() < deadline) {
             find(instrument.uiAutomation.rootInActiveWindow, label)?.let { return it }
             Thread.sleep(50)
@@ -50,7 +50,7 @@ class DesignNavigationTest {
     }
 
     private fun tap(label: String) {
-        val deadline = SystemClock.elapsedRealtime() + 5000
+        val deadline = SystemClock.elapsedRealtime() + if (Build.VERSION.SDK_INT == 33) 60000 else 5000
         var previous = Rect()
         var stableSince = SystemClock.elapsedRealtime()
         while (SystemClock.elapsedRealtime() < deadline) {
@@ -160,6 +160,52 @@ class DesignNavigationTest {
         } finally {
             instrument.runOnMainSync { app.player.clearQueue(); app.player.stopPlayback(); activity.finish() }
             file.delete()
+        }
+    }
+
+    @android.annotation.SuppressLint("DiscouragedApi") // This regression also runs against the previous APK's resource table.
+    @Test fun connectDoesNotOpenPlayerIfListenerCannotStart() {
+        val context = instrument.targetContext
+        val app = context.applicationContext as EqApplication
+        fun label(name: String) = context.getString(context.resources.getIdentifier(name, "string", context.packageName))
+        val saved = app.externalEqSettings.state.value
+        val component = android.content.ComponentName(context, SystemEqService::class.java)
+        val manager = context.packageManager
+        val originalComponentState = manager.getComponentEnabledSetting(component)
+        val player = Intent().setComponent(android.content.ComponentName("dev.rusteq.fixture", "dev.rusteq.fixture.SessionPlayer")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val announced = java.util.concurrent.atomic.AtomicBoolean(false)
+        val probe = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: android.content.Context?, intent: Intent?) {
+                if (intent?.getStringExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME) == "dev.rusteq.fixture") announced.set(true)
+            }
+        }
+        androidx.core.content.ContextCompat.registerReceiver(context, probe,
+            android.content.IntentFilter(android.media.audiofx.AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION),
+            androidx.core.content.ContextCompat.RECEIVER_EXPORTED)
+        instrument.runOnMainSync { ExternalEqController.stop(context) }
+        awaitState("Previous listener must stop") { !app.systemEqState.value.running }
+        app.externalEqSettings.update { it.copy(selectedPackages = setOf("dev.rusteq.fixture"), enabled = false) }
+        if (Build.VERSION.SDK_INT >= 33) instrument.uiAutomation.grantRuntimePermission(context.packageName, android.Manifest.permission.POST_NOTIFICATIONS)
+        val activity = instrument.startActivitySync(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        try {
+            tap(label("ui_tab_tools"))
+            reveal(label("external_ui_connect"))
+            manager.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP)
+            tap(label("external_ui_connect"))
+            assertNotNull("A failed listener start must be reported", app.systemEqState.value.message)
+            val until = SystemClock.elapsedRealtime() + 2500
+            while (SystemClock.elapsedRealtime() < until) {
+                assertFalse("A player must not open when the EQ listener cannot start", announced.get())
+                Thread.sleep(30)
+            }
+            assertFalse(app.systemEqState.value.running)
+            assertEquals(setOf("dev.rusteq.fixture"), app.externalEqSettings.state.value.selectedPackages)
+        } finally {
+            runCatching { context.startActivity(Intent(player).setAction("STOP")) }
+            context.unregisterReceiver(probe)
+            manager.setComponentEnabledSetting(component, originalComponentState, android.content.pm.PackageManager.DONT_KILL_APP)
+            instrument.runOnMainSync { ExternalEqController.stop(context); activity.finish() }
+            app.externalEqSettings.update { saved }
         }
     }
 

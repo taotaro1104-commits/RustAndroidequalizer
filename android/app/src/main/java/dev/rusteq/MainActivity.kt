@@ -28,7 +28,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        (application as EqApplication).player.setForeground(true)
         ExternalEqController.restore(this)
+    }
+
+    override fun onStop() {
+        val runtime = application as EqApplication
+        runtime.player.setForeground(false)
+        runtime.flushSettingsInBackground()
+        super.onStop()
     }
 
     private fun acceptSessionRequest(intent: Intent) {

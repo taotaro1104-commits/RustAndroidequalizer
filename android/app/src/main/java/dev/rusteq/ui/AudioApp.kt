@@ -25,9 +25,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.rusteq.*
 import dev.rusteq.R
@@ -54,15 +51,6 @@ fun AudioApp(vm: PlayerController) {
     val measurementPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let { uri -> vm.optimizeMeasurement(uri, optimizerBands) } }
     val sofaPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let { uri -> vm.importEffect(uri, true) } }
     val irPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let { uri -> vm.importEffect(uri, false) } }
-    val owner = LocalLifecycleOwner.current
-    DisposableEffect(owner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) vm.setForeground(false)
-            if (event == Lifecycle.Event.ON_START) vm.setForeground(true)
-        }
-        owner.lifecycle.addObserver(observer)
-        onDispose { owner.lifecycle.removeObserver(observer) }
-    }
     Scaffold(
         modifier = Modifier.fillMaxSize().systemBarsPadding(),
         containerColor = AudioColors.Background,

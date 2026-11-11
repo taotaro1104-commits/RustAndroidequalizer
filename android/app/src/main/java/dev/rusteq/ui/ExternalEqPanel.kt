@@ -33,6 +33,7 @@ import dev.rusteq.MainActivity
 import dev.rusteq.R
 import dev.rusteq.uiText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 private data class EqTargetApp(val packageName: String, val label: String, val launchable: Boolean)
@@ -68,11 +69,15 @@ internal fun ExternalEqPanel() {
     var enableAfterSave by rememberSaveable { mutableStateOf(false) }
     var pendingLaunchPackage by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingLaunchLabel by rememberSaveable { mutableStateOf("") }
+    var permissionPending by rememberSaveable { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
     val owner = LocalLifecycleOwner.current
     val configuration = LocalConfiguration.current
     DisposableEffect(owner) {
-        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) refresh++ }
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) refresh++
+            if (event == Lifecycle.Event.ON_STOP && !permissionPending) pendingLaunchPackage = null
+        }
         owner.lifecycle.addObserver(observer)
         onDispose { owner.lifecycle.removeObserver(observer) }
     }
@@ -91,12 +96,11 @@ internal fun ExternalEqPanel() {
     }
     // Saving and starting do not depend on the result. Wait for the prompt to close before opening a target.
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        val packageName = pendingLaunchPackage
-        pendingLaunchPackage = null
-        if (packageName != null) launchTarget(packageName, pendingLaunchLabel)
+        permissionPending = false
     }
     fun offerNotificationPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            permissionPending = true
             permission.launch(Manifest.permission.POST_NOTIFICATIONS)
             return true
         }
@@ -110,15 +114,32 @@ internal fun ExternalEqPanel() {
         offerNotificationPermission()
     }
     fun connect(app: EqTargetApp, attached: Boolean) {
-        runtime.externalEqSettings.update { it.copy(enabled = true) }
-        ExternalEqController.connect(context, app.packageName, matchingRequest(app.packageName))
+        pendingLaunchPackage = null
+        if (!ExternalEqController.connect(context, app.packageName, matchingRequest(app.packageName))) return
         if (!attached) {
             pendingLaunchPackage = app.packageName
             pendingLaunchLabel = app.label
         }
-        if (!offerNotificationPermission()) {
+        offerNotificationPermission()
+    }
+    // A new player can announce its session immediately. Open it only after
+    // the service has registered its receiver and the permission prompt closes.
+    LaunchedEffect(pendingLaunchPackage, permissionPending, state.running, settings, refresh) {
+        val packageName = pendingLaunchPackage ?: return@LaunchedEffect
+        if (!settings.shouldRun || packageName !in settings.selectedPackages) {
             pendingLaunchPackage = null
-            if (!attached) launchTarget(app.packageName, app.label)
+        } else if (!permissionPending && state.running && owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            pendingLaunchPackage = null
+            launchTarget(packageName, pendingLaunchLabel)
+        }
+    }
+    LaunchedEffect(pendingLaunchPackage, permissionPending) {
+        val packageName = pendingLaunchPackage ?: return@LaunchedEffect
+        if (permissionPending) return@LaunchedEffect
+        delay(15000)
+        if (pendingLaunchPackage == packageName && !runtime.systemEqState.value.running) {
+            pendingLaunchPackage = null
+            runtime.systemEqState.value = runtime.systemEqState.value.copy(message = uiText(R.string.external_ui_listener_start_timeout))
         }
     }
     AudioPanel {
@@ -151,6 +172,7 @@ internal fun ExternalEqPanel() {
                 val status = when {
                     catalog == null -> R.string.external_ui_loading
                     !app.launchable -> R.string.external_ui_unavailable
+                    pendingLaunchPackage == packageName && !state.running -> R.string.external_ui_starting
                     !settings.enabled -> R.string.external_ui_target_off
                     !state.running -> R.string.external_ui_listener_paused
                     attached -> R.string.external_ui_connected
@@ -158,6 +180,9 @@ internal fun ExternalEqPanel() {
                     else -> R.string.external_ui_waiting
                 }
                 Text(stringResource(status), style = MaterialTheme.typography.bodyMedium, color = if (attached) AudioColors.Green else AudioColors.Muted)
+                if (packageName == "com.google.android.youtube" && !attached) {
+                    Text(stringResource(R.string.external_ui_youtube_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
+                }
                 sessions.forEach { session ->
                     Text(stringResource(R.string.external_ui_session_status, session.id, session.status.resolve(context)), style = MaterialTheme.typography.bodySmall)
                 }

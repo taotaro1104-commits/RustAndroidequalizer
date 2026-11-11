@@ -3,7 +3,6 @@ package dev.rusteq
 import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
-import androidx.core.content.ContextCompat
 
 /** Coordinates saved intent and Android service requests without opening other apps. */
 object ExternalEqController {
@@ -19,14 +18,14 @@ object ExternalEqController {
         ).apply { request?.let { putExtra(AudioEffect.EXTRA_AUDIO_SESSION, it.first); putExtra(AudioEffect.EXTRA_PACKAGE_NAME, it.second) } })
     }
 
-    fun connect(context: Context, packageName: String, request: Pair<Int, String>? = null) {
+    fun connect(context: Context, packageName: String, request: Pair<Int, String>? = null): Boolean {
         val app = context.applicationContext as EqApplication
         if (packageName !in app.externalEqSettings.state.value.selectedPackages) {
             app.systemEqState.value = app.systemEqState.value.copy(message = uiText(R.string.external_service_not_selected))
-            return
+            return false
         }
         app.externalEqSettings.update { it.copy(enabled = true) }
-        launch(context, Intent(context, SystemEqService::class.java).setAction(SystemEqService.CONNECT_PACKAGE)
+        return launch(context, Intent(context, SystemEqService::class.java).setAction(SystemEqService.CONNECT_PACKAGE)
             .putExtra(SystemEqService.EXTRA_TARGET_PACKAGE, packageName).apply {
                 request?.takeIf { it.second == packageName }?.let {
                     putExtra(AudioEffect.EXTRA_AUDIO_SESSION, it.first)
@@ -49,9 +48,16 @@ object ExternalEqController {
         launch(context, Intent(context, SystemEqService::class.java).setAction(SystemEqService.START))
     }
 
-    private fun launch(context: Context, intent: Intent) {
+    private fun launch(context: Context, intent: Intent): Boolean {
         val app = context.applicationContext as EqApplication
-        runCatching { ContextCompat.startForegroundService(context, intent) }
-            .onFailure { app.systemEqState.value = app.systemEqState.value.copy(message = it.asUiText(R.string.external_service_start_failed)) }
+        return runCatching {
+            if (context.startForegroundService(intent) == null) {
+                throw UiTextException(uiText(R.string.external_service_start_failed))
+            }
+            true
+        }.getOrElse {
+            app.systemEqState.value = app.systemEqState.value.copy(message = it.asUiText(R.string.external_service_start_failed))
+            false
+        }
     }
 }
