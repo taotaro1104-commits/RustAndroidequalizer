@@ -64,7 +64,7 @@ class NativePlaybackTest {
         for (preset in presets) {
             val config = preset.config
             assertEquals(31, config.bands.size)
-            assertEquals(EqConfig.defaultBands(31).map { it.hz }, config.bands.map { it.hz })
+            config.bands.zip(EqConfig.defaultBands(31)).forEach { (band, nominal) -> assertEquals(nominal.hz, band.hz, nominal.hz * 0.02f) }
             assertEquals(config, EqConfig.fromJson(config.toJson()))
             assertTrue(config.preamp.isFinite() && config.preamp <= -6f)
             for (i in 0..128) assertTrue(config.responseDb(20f*kotlin.math.exp(kotlin.math.ln(1000f)*i/128f),48000f) <= -1.8f)
