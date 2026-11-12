@@ -194,4 +194,23 @@
     <string name="ui_echo_mix">Echo level</string>
     <string name="ui_echo_time">Echo delay</string>
     <string name="ui_echo_feedback">Repeats (feedback)</string>
+    <string name="ui_ab_heading">Fair A/B and ABX test</string>
+    <string name="ui_ab_hint">Compares your current sound (A) with the same sound with a flat EQ curve (B). The louder side is lowered so both have the same estimated loudness, because louder always sounds better.</string>
+    <string name="ui_ab_start">Start comparing</string>
+    <string name="ui_ab_end">Finish and restore my settings</string>
+    <string name="ui_ab_trim">%1$s was lowered by %2$s dB to match loudness. This is an estimate (about ±1 dB); other effects are not included.</string>
+    <string name="ui_ab_playing">Now playing: %1$s</string>
+    <string name="ui_ab_x">X (hidden)</string>
+    <string name="ui_ab_abx_start">Start ABX (10 rounds)</string>
+    <string name="ui_ab_abx_question">Round %1$d of %2$d: is X the same as A or B?</string>
+    <string name="ui_ab_x_is_a">X is A</string>
+    <string name="ui_ab_x_is_b">X is B</string>
+    <string name="ui_ab_right">Correct</string>
+    <string name="ui_ab_wrong">Wrong</string>
+    <string name="ui_ab_result">Result: %1$d of %2$d correct. Chance of this by guessing alone: %3$s</string>
+    <string name="ui_ab_verdict_clear">You can reliably hear the difference.</string>
+    <string name="ui_ab_verdict_unclear">Not distinguishable from guessing. The difference may be too small for you to hear.</string>
+    <string name="ui_ab_locked">Settings are locked during A/B. Finish to edit again.</string>
+    <string name="ui_ab_sound_a">A (current)</string>
+    <string name="ui_ab_sound_b">B (flat EQ)</string>
 </resources>

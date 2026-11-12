@@ -192,4 +192,23 @@
     <string name="ui_echo_mix">エコーの量</string>
     <string name="ui_echo_time">エコーの間隔</string>
     <string name="ui_echo_feedback">繰り返し（フィードバック）</string>
+    <string name="ui_ab_heading">音量をそろえたA/B比較・ABXテスト</string>
+    <string name="ui_ab_hint">いまの音（A）と、EQ カーブをフラットにした同じ音（B）を比べます。音が大きい方が良く聞こえてしまうため、大きい側を下げて推定ラウドネスをそろえます。</string>
+    <string name="ui_ab_start">比較を始める</string>
+    <string name="ui_ab_end">終了して設定を元に戻す</string>
+    <string name="ui_ab_trim">%1$s を %2$s dB 下げて音量をそろえました。推定値（約±1 dB）で、他のエフェクトは含みません。</string>
+    <string name="ui_ab_playing">再生中: %1$s</string>
+    <string name="ui_ab_x">X（非表示）</string>
+    <string name="ui_ab_abx_start">ABX を始める（10 回）</string>
+    <string name="ui_ab_abx_question">%1$d / %2$d 回目: X は A と B のどちらですか？</string>
+    <string name="ui_ab_x_is_a">X は A</string>
+    <string name="ui_ab_x_is_b">X は B</string>
+    <string name="ui_ab_right">正解</string>
+    <string name="ui_ab_wrong">不正解</string>
+    <string name="ui_ab_result">結果: %2$d 回中 %1$d 回正解。当てずっぽうでこの結果になる確率: %3$s</string>
+    <string name="ui_ab_verdict_clear">違いをはっきり聞き分けられています。</string>
+    <string name="ui_ab_verdict_unclear">当てずっぽうと区別できません。違いが小さく、聞き分けられていない可能性があります。</string>
+    <string name="ui_ab_locked">A/B 中は設定を変更できません。終了すると編集できます。</string>
+    <string name="ui_ab_sound_a">A（いまの設定）</string>
+    <string name="ui_ab_sound_b">B（フラット EQ）</string>
 </resources>

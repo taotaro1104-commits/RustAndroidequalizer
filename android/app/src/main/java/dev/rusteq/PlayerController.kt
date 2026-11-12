@@ -27,6 +27,19 @@ data class PlayerState(
     val queueSize: Int = 0, val queueIndex: Int = 0,
     val optimizing: Boolean = false, val optimizationReport: UiText? = null,
     val presetTitle: String? = null,
+    val ab: AbState? = null,
+)
+
+/** Which sound the A/B (ABX) panel is currently playing. X is a hidden A or B. */
+enum class AbSlot { A, B, X }
+
+/** Immutable snapshot for the UI; the hidden ABX assignment is never part of it. */
+data class AbState(
+    val listening: AbSlot = AbSlot.A,
+    /** How many dB the louder side was lowered so both sides match in estimated loudness. */
+    val trimDb: Float = 0f, val trimmedIsA: Boolean = true,
+    val abxRunning: Boolean = false, val abxDone: Int = 0, val abxTotal: Int = 0,
+    val abxCorrect: Int = 0, val abxP: Double = 1.0, val lastRight: Boolean? = null,
 )
 
 class PlayerController(private val app: Application) {
@@ -117,12 +130,14 @@ class PlayerController(private val app: Application) {
     }
 
     fun configure(change: (EqConfig) -> EqConfig) {
+        if (abActive) return
         presetRevision++
         mutable.update { it.copy(config = change(it.config), presetTitle = null) }; dirty = true
         persistSoundSettings()
     }
 
     private fun persistSoundSettings() {
+        if (abActive) return // temporary A/B sounds must never overwrite the saved settings
         val value = mutable.value
         soundSettings.save(value.config, requestedSpatial, value.presetTitle, value.selected)
     }
@@ -136,6 +151,7 @@ class PlayerController(private val app: Application) {
 
     fun applyBuiltinPreset(id: String) {
         val preset = BuiltinPresets.find(id) ?: return
+        if (abActive) return
         val revision = ++presetRevision
         viewModelScope.launch {
             val config = withContext(Dispatchers.Default) { preset.config }
@@ -144,6 +160,57 @@ class PlayerController(private val app: Application) {
             dirty = true
             persistSoundSettings()
         }
+    }
+
+    // ---- Level-matched A/B and ABX (A = current sound, B = same sound with a flat EQ curve) ----
+    private val abActive get() = abOriginal != null
+    private var abOriginal: EqConfig? = null
+    private var abPair: Pair<EqConfig, EqConfig>? = null
+    private var abx: AbxSession? = null
+
+    fun abStart() {
+        if (abActive) return
+        val original = mutable.value.config.copy(bypass = false)
+        val flat = original.copy(bands = original.bands.map { it.copy(db = 0f) }, preamp = 0f)
+        val pair = LoudnessMatch.matchedPair(original, flat)
+        val trim = if (LoudnessMatch.meanDb(original) > LoudnessMatch.meanDb(flat)) pair.first.preamp - original.preamp else pair.second.preamp - flat.preamp
+        abOriginal = mutable.value.config; abPair = pair; abx = null
+        mutable.update { it.copy(config = pair.first, ab = AbState(AbSlot.A, trimDb = trim, trimmedIsA = LoudnessMatch.meanDb(original) > LoudnessMatch.meanDb(flat))) }
+        dirty = true
+    }
+
+    fun abListen(slot: AbSlot) {
+        val pair = abPair ?: return
+        val session = abx
+        val useA = when (slot) { AbSlot.A -> true; AbSlot.B -> false; AbSlot.X -> session?.takeIf { !it.finished }?.hiddenIsA ?: return }
+        mutable.update { it.copy(config = if (useA) pair.first else pair.second, ab = it.ab?.copy(listening = slot)) }
+        dirty = true
+    }
+
+    fun abxBegin() {
+        if (!abActive) return
+        abx = AbxSession().also { abxSnapshot(it, null) }
+        abListen(AbSlot.X)
+    }
+
+    fun abxAnswer(guessA: Boolean) {
+        val session = abx ?: return
+        if (session.finished) return
+        val right = session.answer(guessA)
+        abxSnapshot(session, right)
+        if (!session.finished) abListen(AbSlot.X)
+    }
+
+    private fun abxSnapshot(session: AbxSession, right: Boolean?) {
+        mutable.update { it.copy(ab = it.ab?.copy(abxRunning = !session.finished, abxDone = session.done, abxTotal = session.totalTrials,
+            abxCorrect = session.correct, abxP = session.pValue, lastRight = right)) }
+    }
+
+    fun abEnd() {
+        val original = abOriginal ?: return
+        abOriginal = null; abPair = null; abx = null
+        mutable.update { it.copy(config = original, ab = null) }
+        dirty = true
     }
 
     fun select(index: Int) {
@@ -435,6 +502,7 @@ class PlayerController(private val app: Application) {
         }
     }
     fun applyPreset(name: String) {
+        if (abActive) return
         runCatching { EqConfig.fromJson(preferences.getString("preset:$name", "")!!) }
             .onSuccess { cfg ->
                 presetRevision++
