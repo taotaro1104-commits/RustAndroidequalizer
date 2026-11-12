@@ -114,7 +114,7 @@ fun AudioApp(vm: PlayerController) {
                     1 -> {
                         SectionTitle(stringResource(R.string.ui_space_heading))
                         SpatialPanels(state, vm, { sofaPicker.launch(arrayOf("*/*")) }, { irPicker.launch(arrayOf("audio/*", "application/octet-stream")) })
-                        EchoPanel(state.config, vm)
+                        EchoPanel(state.config, vm, state)
                         DynamicsPanel(state.config, vm)
                     }
                     else -> {
@@ -136,6 +136,7 @@ fun AudioApp(vm: PlayerController) {
                             Button(onClick = { measurementPicker.launch(arrayOf("text/*", "application/octet-stream", "application/vnd.ms-excel")) }, enabled = !state.optimizing, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(if (state.optimizing) stringResource(R.string.ui_optimizing) else stringResource(R.string.ui_select_csv)) }
                             state.optimizationReport?.let { Text(it.resolve(context), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted) }
                         }
+                        AutoProfilePanel(state, vm)
                         EqMatchPanel(state, vm)
                         AbComparePanel(state, vm)
                         ExternalEqPanel()
@@ -327,7 +328,7 @@ private fun SpatialPanels(state: PlayerState, vm: PlayerController, chooseSofa: 
 }
 
 @Composable
-private fun EchoPanel(c: EqConfig, vm: PlayerController) {
+private fun EchoPanel(c: EqConfig, vm: PlayerController, state: PlayerState) {
     var rememberedMix by rememberSaveable { mutableFloatStateOf(.3f) }
     AudioPanel {
         ToggleHeading(stringResource(R.string.ui_echo_heading), stringResource(R.string.ui_echo), c.echoMix > 0f, AudioColors.Blue) { enabled ->
@@ -339,6 +340,17 @@ private fun EchoPanel(c: EqConfig, vm: PlayerController) {
             SettingSlider(stringResource(R.string.ui_echo_mix), "${(c.echoMix * 100).roundToInt()}%", c.echoMix, .01f..1f) { value -> vm.configure { it.copy(echoMix = value) } }
             SettingSlider(stringResource(R.string.ui_echo_time), "${c.echoTimeMs.roundToInt()} ms", c.echoTimeMs, EqConfig.MIN_ECHO_MS..EqConfig.MAX_ECHO_MS) { value -> vm.configure { it.copy(echoTimeMs = value) } }
             SettingSlider(stringResource(R.string.ui_echo_feedback), "${(c.echoFeedback * 100).roundToInt()}%", c.echoFeedback, 0f..EqConfig.MAX_ECHO_FEEDBACK) { value -> vm.configure { it.copy(echoFeedback = value) } }
+            HorizontalDivider(color = AudioColors.Line)
+            Text(stringResource(R.string.ui_tempo_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
+            OutlinedButton(vm::detectTempo, enabled = state.loaded && !state.bpmBusy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(stringResource(if (state.bpmBusy) R.string.ui_tempo_working else R.string.ui_tempo_detect))
+            }
+            state.bpm?.let { bpm ->
+                Text(stringResource(R.string.ui_tempo_result, bpm.roundToInt()), style = MaterialTheme.typography.titleMedium)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    EchoNote.values().forEach { note -> FilterChip(false, { vm.echoNote(note) }, label = { Text(note.label) }, modifier = Modifier.heightIn(min = 48.dp)) }
+                }
+            }
         }
     }
 }

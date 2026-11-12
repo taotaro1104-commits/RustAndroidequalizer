@@ -29,6 +29,8 @@ data class PlayerState(
     val presetTitle: String? = null,
     val ab: AbState? = null,
     val matching: Boolean = false, val canUndoMatch: Boolean = false,
+    val bpm: Float? = null, val bpmBusy: Boolean = false,
+    val profilesOn: Boolean = false, val profileKeys: Set<String> = emptySet(), val activeProfile: String? = null, val outputKind: OutputKind = OutputKind.OTHER,
 )
 
 /** Which sound the A/B (ABX) panel is currently playing. X is a hidden A or B. */
@@ -99,6 +101,7 @@ class PlayerController(private val app: Application) {
                     val volume = currentVolume()
                     if (volume != lastVolume) { lastVolume = volume; dirty = true }
                 }
+                if (ticks % 3000 == 2999) reevaluateProfile() // the night window can start while playing
                 if (dirty) {
                     val config = mutable.value.config
                     val sent = LoudnessCompensation.apply(config, lastVolume)
@@ -172,6 +175,87 @@ class PlayerController(private val app: Application) {
             dirty = true
             persistSoundSettings()
         }
+    }
+
+    // ---- Automatic profiles: this track > night > output device ----
+    private val profiles = ProfileStore(preferences)
+    private var profileBase: EqConfig? = null
+    private var lastResolved: String? = null
+
+    private fun outputKind(): OutputKind = OutputClassifier.classify(audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).map { it.type })
+    private fun currentTrackId(): String? = queue.getOrNull(queueIndex)?.toString()?.takeIf { !lastWasDemo }
+    private fun hourNow() = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    fun deviceKeyNow() = ProfileResolver.deviceKey(outputKind())
+    fun trackKeyNow() = currentTrackId()?.let(ProfileResolver::trackKey)
+
+    private fun publishProfiles(active: String?) {
+        mutable.update { it.copy(profilesOn = profiles.enabled, profileKeys = profiles.keys(), activeProfile = active, outputKind = outputKind()) }
+    }
+
+    /** Edge-triggered: only acts when the winning profile changes, so manual edits are never fought. */
+    fun reevaluateProfile() {
+        if (!profiles.enabled) { publishProfiles(null); return }
+        if (abActive) return
+        val resolved = ProfileResolver.resolve(ProfileResolver.candidates(currentTrackId(), hourNow(), outputKind()), profiles.keys())
+        if (resolved == lastResolved) { publishProfiles(resolved); return }
+        lastResolved = resolved
+        val target = resolved?.let(profiles::get) ?: if (resolved == null) profileBase else null
+        if (resolved != null && target != null && profileBase == null) profileBase = mutable.value.config
+        if (resolved == null) profileBase = null
+        if (target != null) {
+            presetRevision++
+            mutable.update { it.copy(config = target, selected = 0, presetTitle = null) }; dirty = true
+            persistSoundSettings()
+        }
+        publishProfiles(resolved)
+    }
+
+    fun setProfilesEnabled(on: Boolean) {
+        profiles.enabled = on
+        if (!on) profileBase?.let { b -> presetRevision++; mutable.update { it.copy(config = b, selected = 0, presetTitle = null) }; dirty = true; persistSoundSettings() }
+        profileBase = null; lastResolved = null
+        reevaluateProfile()
+    }
+
+    /** Saves the current sound under [key]; it takes effect the next time that condition wins. */
+    fun saveProfile(key: String) {
+        if (abActive) return
+        profiles.put(key, mutable.value.config)
+        publishProfiles(mutable.value.activeProfile)
+    }
+
+    fun deleteProfile(key: String) {
+        profiles.remove(key)
+        reevaluateProfile()
+    }
+
+    private val deviceCallback = object : android.media.AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(added: Array<out android.media.AudioDeviceInfo>?) { reevaluateProfile() }
+        override fun onAudioDevicesRemoved(removed: Array<out android.media.AudioDeviceInfo>?) { reevaluateProfile() }
+    }
+
+    init { // after the property initializers above
+        audio.registerAudioDeviceCallback(deviceCallback, android.os.Handler(android.os.Looper.getMainLooper()))
+        publishProfiles(null)
+    }
+
+    // ---- Tempo-synced echo ----
+    fun detectTempo() {
+        val path = lastPath?.takeIf { !lastWasDemo }
+        if (path == null || !mutable.value.loaded) { mutable.update { it.copy(message = uiText(R.string.player_match_need_track)) }; return }
+        if (mutable.value.bpmBusy) return
+        mutable.update { it.copy(bpmBusy = true) }
+        viewModelScope.launch {
+            val bpm = runCatching { withContext(Dispatchers.Default) {
+                val d = BpmDetector(); PcmDecoder.decode(path) { m, n, sr -> d.add(m, n, sr) }; d.bpm()
+            } }.getOrNull()
+            mutable.update { it.copy(bpmBusy = false, bpm = bpm, message = if (bpm == null) uiText(R.string.player_tempo_failed) else it.message) }
+        }
+    }
+
+    fun echoNote(note: EchoNote) {
+        val bpm = mutable.value.bpm ?: return
+        configure { it.copy(echoMix = it.echoMix.coerceAtLeast(.05f), echoTimeMs = TempoSync.echoMs(bpm, note)) }
     }
 
     // ---- EQ match: move the current track's tonal balance toward a reference track ----
@@ -339,7 +423,8 @@ class PlayerController(private val app: Application) {
                 lastPath?.let { File(it).delete() }
                 lastPath = destination.absolutePath; lastWasDemo = false
                 val loadedMetrics = native { nativeEngine.metrics().toList() }
-                mutable.update { it.copy(title = title?.let { name -> UiText.Literal(name) } ?: uiText(R.string.player_local_audio), loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f) }
+                mutable.update { it.copy(title = title?.let { name -> UiText.Literal(name) } ?: uiText(R.string.player_local_audio), loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f, bpm = null) }
+                reevaluateProfile()
                 startWithFocus()
             }.onFailure { error ->
                 if (error is CancellationException) throw error
@@ -360,7 +445,7 @@ class PlayerController(private val app: Application) {
             if (error.isBlank()) {
                 lastPath?.let { File(it).delete() }; lastPath = null; lastWasDemo = true
                 val loadedMetrics = native { nativeEngine.metrics().toList() }
-                mutable.update { it.copy(title = uiText(R.string.player_demo_title), loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f) }
+                mutable.update { it.copy(title = uiText(R.string.player_demo_title), loaded = true, finished = false, metrics = loadedMetrics, effectLatencyMs = 0f, bpm = null) }
                 startWithFocus()
             } else mutable.update { it.copy(message = IllegalStateException(error).asUiText(R.string.player_load_failed), loaded = false) }
             mutable.update { it.copy(loading = false) }; dirty = true
@@ -620,6 +705,7 @@ class PlayerController(private val app: Application) {
 
     fun release() {
         viewModelScope.cancel()
+        audio.unregisterAudioDeviceCallback(deviceCallback)
         app.unregisterReceiver(noisyReceiver)
         audio.abandonAudioFocusRequest(focus)
         // Close/join outside the main thread; C++ serializes this with pending JNI calls.

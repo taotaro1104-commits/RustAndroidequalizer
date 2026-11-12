@@ -226,4 +226,25 @@
     <string name="player_match_analyze_failed">Could not analyze the audio. The file may be unsupported or silent.</string>
     <string name="player_match_already_close">The two tracks already have a very similar tonal balance. Nothing was changed.</string>
     <string name="player_match_done">Set the 31 bands to match the reference track. Check the result by ear; you can undo it from the Tools tab.</string>
+    <string name="ui_tempo_hint">Match the echo to the tempo of the song: detect the BPM, then pick a note length.</string>
+    <string name="ui_tempo_detect">Detect the tempo of the song</string>
+    <string name="ui_tempo_working">Detecting…</string>
+    <string name="ui_tempo_result">Tempo: about %1$d BPM. Tap a note length to set the echo time.</string>
+    <string name="player_tempo_failed">Could not find a steady tempo in this track.</string>
+    <string name="ui_profile_heading">Automatic profiles</string>
+    <string name="ui_profile_summary">Switch sound by track, night, or output</string>
+    <string name="ui_profile_hint">Saves a whole sound for a situation and switches to it automatically: a specific track, night time (22:00–06:00), or the connected output (Bluetooth, wired, speaker). Priority: track, then night, then output. When no profile applies, your previous sound comes back.</string>
+    <string name="ui_profile_now">Output: %1$s / Active profile: %2$s</string>
+    <string name="ui_profile_none">none</string>
+    <string name="ui_profile_save_hint">Set the sound you want first, then save it for a situation.</string>
+    <string name="ui_profile_save_device">Save current sound for %1$s</string>
+    <string name="ui_profile_save_night">Save current sound for night</string>
+    <string name="ui_profile_save_track">Save current sound for this track</string>
+    <string name="ui_profile_delete">Delete</string>
+    <string name="ui_profile_night">Night (22:00–06:00)</string>
+    <string name="ui_profile_track">A specific track</string>
+    <string name="ui_profile_bluetooth">Bluetooth</string>
+    <string name="ui_profile_wired">Wired / USB</string>
+    <string name="ui_profile_speaker">Speaker</string>
+    <string name="ui_profile_other">Other output</string>
 </resources>
