@@ -213,4 +213,8 @@
     <string name="ui_ab_locked">Settings are locked during A/B. Finish to edit again.</string>
     <string name="ui_ab_sound_a">A (current)</string>
     <string name="ui_ab_sound_b">B (flat EQ)</string>
+    <string name="ui_loudness_heading">Keep bass at low volume</string>
+    <string name="ui_loudness">Volume-linked loudness</string>
+    <string name="ui_loudness_hint">Our ears lose bass and treble at low volume. When the system volume goes down, this raises low and high frequencies automatically (with matching headroom). Your own EQ curve is not changed.</string>
+    <string name="ui_loudness_strength">Strength</string>
 </resources>

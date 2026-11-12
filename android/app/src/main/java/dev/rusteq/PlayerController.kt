@@ -64,6 +64,11 @@ class PlayerController(private val app: Application) {
     ))
     val state = mutable.asStateFlow()
     private var dirty = true
+    private var lastVolume = 1f
+    private fun currentVolume(): Float {
+        val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        return if (max > 0) audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / max else 1f
+    }
     private var presetRevision = 0
     private var lastPath: String? = null
     private var lastWasDemo = true
@@ -88,9 +93,15 @@ class PlayerController(private val app: Application) {
             var ticks = 0
             while (isActive) {
                 delay(20)
+                if (ticks % 10 == 0 && mutable.value.config.loudnessStrength > 0f) {
+                    // Volume buttons change the system stream, so poll cheaply (every 200 ms) and re-derive the EQ.
+                    val volume = currentVolume()
+                    if (volume != lastVolume) { lastVolume = volume; dirty = true }
+                }
                 if (dirty) {
                     val config = mutable.value.config
-                    val accepted = native { nativeEngine.configure(config.packed()) }
+                    val sent = LoudnessCompensation.apply(config, lastVolume)
+                    val accepted = native { nativeEngine.configure(sent.packed()) }
                     if (accepted && mutable.value.config == config) dirty = false
                 }
                 if (++ticks % 10 == 0 && mutable.value.loaded && !mutable.value.loading) {
@@ -170,7 +181,7 @@ class PlayerController(private val app: Application) {
 
     fun abStart() {
         if (abActive) return
-        val original = mutable.value.config.copy(bypass = false)
+        val original = mutable.value.config.copy(bypass = false, loudnessStrength = 0f) // fixed level: volume-linked boost would bias the comparison
         val flat = original.copy(bands = original.bands.map { it.copy(db = 0f) }, preamp = 0f)
         val pair = LoudnessMatch.matchedPair(original, flat)
         val trim = if (LoudnessMatch.meanDb(original) > LoudnessMatch.meanDb(flat)) pair.first.preamp - original.preamp else pair.second.preamp - flat.preamp

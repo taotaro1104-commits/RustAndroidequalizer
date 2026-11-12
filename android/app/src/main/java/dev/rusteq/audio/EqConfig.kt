@@ -26,6 +26,8 @@ data class EqConfig(
     val echoMix: Float = 0f,
     val echoTimeMs: Float = 300f,
     val echoFeedback: Float = .35f,
+    /** Volume-linked loudness compensation strength 0..1 (0 = off); applied by [LoudnessCompensation], not sent to the engine. */
+    val loudnessStrength: Float = 0f,
 ) {
     fun packed(): FloatArray = FloatArray(107).also { v ->
         v[0] = preamp; v[1] = if (bypass) 1f else 0f; v[2] = bands.size.toFloat()
@@ -42,6 +44,7 @@ data class EqConfig(
         put("spatial", spatial); put("width", width); put("crossfeed", crossfeed)
         put("virtualBassAmount", virtualBassAmount); put("virtualBassHz", virtualBassHz)
         put("echoMix", echoMix); put("echoTimeMs", echoTimeMs); put("echoFeedback", echoFeedback)
+        put("loudnessStrength", loudnessStrength)
         put("bands", JSONArray().apply { bands.forEach { put(JSONArray(listOf(it.hz, it.db, it.q))) } })
     }.toString()
 
@@ -81,6 +84,7 @@ data class EqConfig(
                 echoMix = finite(j.optDouble("echoMix", 0.0), 0f, 1f),
                 echoTimeMs = finite(j.optDouble("echoTimeMs", 300.0), MIN_ECHO_MS, MAX_ECHO_MS),
                 echoFeedback = finite(j.optDouble("echoFeedback", .35), 0f, MAX_ECHO_FEEDBACK),
+                loudnessStrength = finite(j.optDouble("loudnessStrength", 0.0), 0f, 1f),
             )
         }
 

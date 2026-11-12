@@ -2,6 +2,7 @@ package dev.rusteq
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.rusteq.audio.EqConfig
+import dev.rusteq.audio.LoudnessCompensation
 import dev.rusteq.audio.NativeEngine
 import dev.rusteq.audio.responseDb
 import org.junit.After
@@ -90,6 +91,17 @@ class NativePlaybackTest {
         assertEquals(0f, EqConfig.fromJson(org.json.JSONObject(base.toString()).apply { remove("echoMix") }.toString()).echoMix, 0f)
         for ((key, bad) in listOf("echoMix" to 1.5, "echoTimeMs" to 5.0, "echoTimeMs" to 2000.0, "echoFeedback" to .95))
             assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(base.toString()).put(key, bad).toString()) }.isFailure)
+    }
+
+    @Test fun loudnessStrengthRoundTripsAndIsValidated() {
+        val c = EqConfig(loudnessStrength = .6f)
+        assertEquals(c, EqConfig.fromJson(c.toJson()))
+        assertEquals(107, c.packed().size) // not sent to the engine; derived by LoudnessCompensation
+        val base = org.json.JSONObject(c.toJson())
+        assertEquals(0f, EqConfig.fromJson(org.json.JSONObject(base.toString()).apply { remove("loudnessStrength") }.toString()).loudnessStrength, 0f)
+        for (bad in listOf(-.1, 1.5)) assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(base.toString()).put("loudnessStrength", bad).toString()) }.isFailure)
+        // A compensated config must still be accepted by the native engine.
+        assertTrue(nativeEngine.configure(LoudnessCompensation.apply(c, .1f).packed()))
     }
 
     @Test fun demoUsesNativeCallbackAndPausePreservesPosition() {

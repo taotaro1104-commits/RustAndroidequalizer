@@ -211,4 +211,8 @@
     <string name="ui_ab_locked">A/B 中は設定を変更できません。終了すると編集できます。</string>
     <string name="ui_ab_sound_a">A（いまの設定）</string>
     <string name="ui_ab_sound_b">B（フラット EQ）</string>
+    <string name="ui_loudness_heading">小音量でも低音を保つ</string>
+    <string name="ui_loudness">音量連動ラウドネス</string>
+    <string name="ui_loudness_hint">人の耳は音量が小さいと低音と高音が聞こえにくくなります。端末の音量を下げると、低域と高域を自動で補います（歪まないよう余裕も確保）。あなたの EQ カーブ自体は変わりません。</string>
+    <string name="ui_loudness_strength">強さ</string>
 </resources>

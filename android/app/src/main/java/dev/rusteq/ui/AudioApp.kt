@@ -108,6 +108,7 @@ fun AudioApp(vm: PlayerController) {
                         }
                         EqualizerPanel(state, vm)
                         BassPanel(state.config, vm)
+                        LoudnessPanel(state.config, vm)
                         Text(stringResource(R.string.ui_listen_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
                     }
                     1 -> {
@@ -257,6 +258,21 @@ private fun BassPanel(c: EqConfig, vm: PlayerController) {
         if (c.virtualBassAmount > 0f) {
             SettingSlider(stringResource(R.string.ui_bass_amount), "${(c.virtualBassAmount * 100).roundToInt()}%", c.virtualBassAmount, .01f..EqConfig.MAX_BASS_AMOUNT, AudioColors.Bass) { value -> vm.configure { it.copy(virtualBassAmount = value) } }
             SettingSlider(stringResource(R.string.ui_bass_cutoff), "${c.virtualBassHz.roundToInt()} Hz", c.virtualBassHz, 60f..180f, AudioColors.Bass) { value -> vm.configure { it.copy(virtualBassHz = value) } }
+        }
+    }
+}
+
+@Composable
+private fun LoudnessPanel(c: EqConfig, vm: PlayerController) {
+    var remembered by rememberSaveable { mutableFloatStateOf(.7f) }
+    AudioPanel {
+        ToggleHeading(stringResource(R.string.ui_loudness_heading), stringResource(R.string.ui_loudness), c.loudnessStrength > 0f, AudioColors.Blue) { enabled ->
+            if (!enabled) remembered = c.loudnessStrength
+            vm.configure { it.copy(loudnessStrength = if (enabled) remembered.coerceAtLeast(.1f) else 0f) }
+        }
+        Text(stringResource(R.string.ui_loudness_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
+        if (c.loudnessStrength > 0f) {
+            SettingSlider(stringResource(R.string.ui_loudness_strength), "${(c.loudnessStrength * 100).roundToInt()}%", c.loudnessStrength, .05f..1f) { value -> vm.configure { it.copy(loudnessStrength = value) } }
         }
     }
 }
