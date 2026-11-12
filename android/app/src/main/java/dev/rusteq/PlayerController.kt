@@ -184,6 +184,14 @@ class PlayerController(private val app: Application) {
         }
     }
 
+    /** Applies a preset pasted from a share link; the UI only calls this after the user confirmed. */
+    fun importShared(text: String) {
+        val cfg = PresetShare.decode(text)
+        if (cfg == null) { mutable.update { it.copy(message = uiText(R.string.player_share_invalid)) }; return }
+        configure { cfg }; select(0)
+        mutable.update { it.copy(message = uiText(R.string.player_profile_imported, cfg.bands.size)) }
+    }
+
     // ---- Hearing test: ascending-level thresholds -> personal 31-band compensation ----
     private var hearingJob: Job? = null
     @Volatile private var hearingHeard = false

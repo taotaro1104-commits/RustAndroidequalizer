@@ -142,6 +142,7 @@ fun AudioApp(vm: PlayerController) {
                         }
                         RoomCalibrationPanel(state, vm)
                         HearingPanel(state, vm)
+                        SharePanel(state, vm)
                         AutoProfilePanel(state, vm)
                         EqMatchPanel(state, vm)
                         AbComparePanel(state, vm)
@@ -485,7 +486,7 @@ internal fun SettingSlider(label: String, valueLabel: String, value: Float, rang
 }
 
 @Composable
-private fun ActionRow(title: String, description: String, symbol: AudioSymbol, action: () -> Unit) {
+internal fun ActionRow(title: String, description: String, symbol: AudioSymbol, action: () -> Unit) {
     Surface(onClick = action, shape = RoundedCornerShape(12.dp), color = Color.Transparent, modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)) {
         Row(Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AudioIcon(symbol, tint = AudioColors.Blue)

@@ -295,4 +295,16 @@
     <string name="ui_tp_heading">True Peak リミッター</string>
     <string name="ui_tp">ピークでの歪みを防ぐ</string>
     <string name="ui_tp_hint">約1 ms 先読みし、サンプルの間に現れるピークも検出します。強い低音ブーストや疑似BASS 200% での歪みを減らします。約1 msの遅延が加わります。</string>
+    <string name="ui_share_heading">音を共有する</string>
+    <string name="ui_share_hint">いまの音を短いテキストのリンクにして、チャットやメモアプリで送れます。相手はここに貼り付けて取り込みます。このアプリは何もアップロードしません。</string>
+    <string name="ui_share_send">いまの音を共有</string>
+    <string name="ui_share_send_hint">EQ とエフェクトをテキストのリンクで送る</string>
+    <string name="ui_share_import">リンクから取り込む</string>
+    <string name="ui_share_import_hint">受け取ったリンクを貼り付ける</string>
+    <string name="ui_share_message">私の Rust EQ の音です（Rust EQ のツールタブ「リンクから取り込む」に貼り付けてください）:\n%1$s</string>
+    <string name="ui_share_paste">ここにリンクを貼り付け</string>
+    <string name="ui_share_valid">有効な音の設定が見つかりました。取り込むと現在の設定が置き換わります。</string>
+    <string name="ui_share_invalid">このテキストに有効な設定は見つかりませんでした。</string>
+    <string name="ui_share_apply">取り込む</string>
+    <string name="player_share_invalid">リンクを読み取れないか、設定が範囲外です。</string>
 </resources>

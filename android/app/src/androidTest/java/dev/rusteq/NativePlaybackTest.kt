@@ -105,6 +105,20 @@ class NativePlaybackTest {
         assertTrue(nativeEngine.configure(LoudnessCompensation.apply(c, .1f).packed()))
     }
 
+    @Test fun dspEffectSettingsRoundTripShareAndAreAcceptedByNativeEngine() {
+        val c = EqConfig(reverbMix = .4f, reverbDecayS = 2.5f, reverbDamping = .7f, exciterAmount = .5f, exciterHz = 5000f,
+            dynEqRangeDb = 9f, dynEqHz = 200f, dynEqThresholdDb = -24f, dynEqRatio = 4f, truePeakLimiter = false, virtualBassAmount = 2f)
+        assertEquals(117, c.packed().size)
+        assertEquals(c, EqConfig.fromJson(c.toJson()))
+        assertEquals(c, dev.rusteq.audio.PresetShare.decode(dev.rusteq.audio.PresetShare.encode(c)))
+        assertTrue(nativeEngine.configure(c.packed()))
+        assertTrue(nativeEngine.configure(c.packed().copyOf(107)))
+        val base = org.json.JSONObject(c.toJson())
+        for ((key, bad) in listOf("reverbMix" to 2.0, "reverbDecayS" to 0.0, "reverbDecayS" to 9.0, "exciterHz" to 100.0, "dynEqRangeDb" to 40.0, "dynEqHz" to 5.0, "dynEqRatio" to 0.5))
+            assertTrue("$key=$bad", runCatching { EqConfig.fromJson(org.json.JSONObject(base.toString()).put(key, bad).toString()) }.isFailure)
+        assertNull(dev.rusteq.audio.PresetShare.decode("rusteq1:" + "A".repeat(50)))
+    }
+
     @Test fun demoUsesNativeCallbackAndPausePreservesPosition() {
         assertTrue(nativeEngine.configure(EqConfig().packed()))
         assertEquals("", nativeEngine.load(null))
@@ -139,7 +153,7 @@ class NativePlaybackTest {
         assertEquals(2, config.bands.size)
         assertEquals(-5.5f, config.preamp, 0f)
         assertEquals(config, EqConfig.fromJson(config.toJson()))
-        assertEquals(107, config.packed().size)
+        assertEquals(117, config.packed().size)
         val single = EqConfig.fromAutoEq("Filter 1: ON PK Fc 100 Hz Gain -3 dB Q 1")
         val reset = single.copy(bands = EqConfig.defaultBands(single.bands.size))
         assertTrue(reset.bands.single().hz.isFinite())
