@@ -1,8 +1,12 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package dev.rusteq.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -49,5 +53,25 @@ internal fun AbComparePanel(state: PlayerState, vm: PlayerController) {
             else -> OutlinedButton(vm::abxBegin, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.ui_ab_abx_start)) }
         }
         TextButton(vm::abEnd, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.ui_ab_end)) }
+    }
+}
+
+/** Reference-track EQ matching: analyse both tracks and set the 31 bands to close the tonal-balance gap. */
+@Composable
+internal fun EqMatchPanel(state: PlayerState, vm: PlayerController) {
+    var strength by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableFloatStateOf(.7f) }
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let { uri -> vm.matchToReference(uri, strength) } }
+    AudioPanel {
+        SectionTitle(stringResource(R.string.ui_match_heading))
+        Text(stringResource(R.string.ui_match_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(.4f to "40%", .7f to "70%", 1f to "100%").forEach { (v, label) ->
+                FilterChip(strength == v, { strength = v }, label = { Text(label) }, modifier = Modifier.heightIn(min = 48.dp))
+            }
+        }
+        Button(onClick = { picker.launch(arrayOf("audio/*", "application/ogg")) }, enabled = state.loaded && !state.matching && state.ab == null, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Text(stringResource(if (state.matching) R.string.ui_match_working else R.string.ui_match_choose))
+        }
+        if (state.canUndoMatch) TextButton(vm::undoMatch, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.ui_match_undo)) }
     }
 }

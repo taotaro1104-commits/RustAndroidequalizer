@@ -28,6 +28,7 @@ data class PlayerState(
     val optimizing: Boolean = false, val optimizationReport: UiText? = null,
     val presetTitle: String? = null,
     val ab: AbState? = null,
+    val matching: Boolean = false, val canUndoMatch: Boolean = false,
 )
 
 /** Which sound the A/B (ABX) panel is currently playing. X is a hidden A or B. */
@@ -171,6 +172,45 @@ class PlayerController(private val app: Application) {
             dirty = true
             persistSoundSettings()
         }
+    }
+
+    // ---- EQ match: move the current track's tonal balance toward a reference track ----
+    private var matchUndo: EqConfig? = null
+    private var currentSpectrum: Pair<String, DoubleArray>? = null
+
+    fun matchToReference(reference: Uri, strength: Float) {
+        val path = lastPath?.takeIf { !lastWasDemo }
+        val s = mutable.value
+        if (abActive || s.matching || s.loading) return
+        if (path == null || !s.loaded) { mutable.update { it.copy(message = uiText(R.string.player_match_need_track)) }; return }
+        mutable.update { it.copy(matching = true, message = null) }
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    val current = currentSpectrum?.takeIf { it.first == path }?.second
+                        ?: TrackSpectrum.analyze(path)?.also { currentSpectrum = path to it }
+                        ?: throw UiTextException(uiText(R.string.player_match_analyze_failed))
+                    val target = TrackSpectrum.analyze(app, reference) ?: throw UiTextException(uiText(R.string.player_match_analyze_failed))
+                    EqMatch.gains(target, current, strength)
+                }
+            }.onSuccess { gains ->
+                val before = mutable.value.config
+                if (gains.all { it == 0f }) { mutable.update { it.copy(matching = false, message = uiText(R.string.player_match_already_close)) }; return@onSuccess }
+                configure { EqMatch.toConfig(it, gains) }; select(0)
+                matchUndo = before
+                mutable.update { it.copy(matching = false, canUndoMatch = true, message = uiText(R.string.player_match_done)) }
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                mutable.update { it.copy(matching = false, message = e.asUiText(R.string.player_match_analyze_failed)) }
+            }
+        }
+    }
+
+    fun undoMatch() {
+        val before = matchUndo ?: return
+        matchUndo = null
+        configure { before }
+        mutable.update { it.copy(canUndoMatch = false) }
     }
 
     // ---- Level-matched A/B and ABX (A = current sound, B = same sound with a flat EQ curve) ----

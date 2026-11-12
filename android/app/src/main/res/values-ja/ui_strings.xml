@@ -185,7 +185,7 @@
     <string name="ui_preset31_bass">ベースブースト（31バンド）</string>
     <string name="ui_preset31_bass_description">超低域〜低域を強く持ち上げ、疑似BASSも加える</string>
     <string name="ui_preset31_megabass">メガベース（31バンド）</string>
-    <string name="ui_preset31_megabass_description">EQ と疑似BASS 150% で最大級の低音</string>
+    <string name="ui_preset31_megabass_description">EQ と疑似BASS 150％ で最大級の低音</string>
     <string name="ui_echo_heading">エコーを加える</string>
     <string name="ui_echo">エコー</string>
     <string name="ui_echo_hint">少し遅れて音を繰り返します。アプリ内の再生に使えます。</string>
@@ -215,4 +215,13 @@
     <string name="ui_loudness">音量連動ラウドネス</string>
     <string name="ui_loudness_hint">人の耳は音量が小さいと低音と高音が聞こえにくくなります。端末の音量を下げると、低域と高域を自動で補います（歪まないよう余裕も確保）。あなたの EQ カーブ自体は変わりません。</string>
     <string name="ui_loudness_strength">強さ</string>
+    <string name="ui_match_heading">お手本の曲に音色を近づける</string>
+    <string name="ui_match_hint">好きな音の曲を選ぶと、その平均的な音色バランスと、いま読み込んでいる曲との差を計算し、31バンドを自動で設定します（全体の音量は合わせません）。解析は各曲の中央付近、最大90秒です。元に戻せます。</string>
+    <string name="ui_match_choose">お手本の曲を選ぶ</string>
+    <string name="ui_match_working">解析中…</string>
+    <string name="ui_match_undo">マッチを元に戻す</string>
+    <string name="player_match_need_track">先にご自身の曲を読み込んでください。内蔵デモは対象外です。</string>
+    <string name="player_match_analyze_failed">音声を解析できませんでした。非対応のファイルか、無音の可能性があります。</string>
+    <string name="player_match_already_close">2 曲の音色はすでによく似ているため、変更しませんでした。</string>
+    <string name="player_match_done">お手本の曲に合わせて 31 バンドを設定しました。耳で確認してください。ツールタブから元に戻せます。</string>
 </resources>

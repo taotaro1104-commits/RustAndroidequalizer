@@ -136,6 +136,7 @@ fun AudioApp(vm: PlayerController) {
                             Button(onClick = { measurementPicker.launch(arrayOf("text/*", "application/octet-stream", "application/vnd.ms-excel")) }, enabled = !state.optimizing, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(if (state.optimizing) stringResource(R.string.ui_optimizing) else stringResource(R.string.ui_select_csv)) }
                             state.optimizationReport?.let { Text(it.resolve(context), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted) }
                         }
+                        EqMatchPanel(state, vm)
                         AbComparePanel(state, vm)
                         ExternalEqPanel()
                         DiagnosticsPanel(state)

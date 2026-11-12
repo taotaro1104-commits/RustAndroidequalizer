@@ -187,7 +187,7 @@
     <string name="ui_preset31_bass">Bass Boost (31-band)</string>
     <string name="ui_preset31_bass_description">Strongly lift sub-bass to low range, plus bass enhancement</string>
     <string name="ui_preset31_megabass">Mega Bass (31-band)</string>
-    <string name="ui_preset31_megabass_description">Maximum bass: EQ plus 150% bass enhancement</string>
+    <string name="ui_preset31_megabass_description">Maximum bass: EQ plus bass enhancement at 150 percent</string>
     <string name="ui_echo_heading">Add an echo</string>
     <string name="ui_echo">Echo</string>
     <string name="ui_echo_hint">Repeat the sound after a short delay. Applies to playback inside this app.</string>
@@ -217,4 +217,13 @@
     <string name="ui_loudness">Volume-linked loudness</string>
     <string name="ui_loudness_hint">Our ears lose bass and treble at low volume. When the system volume goes down, this raises low and high frequencies automatically (with matching headroom). Your own EQ curve is not changed.</string>
     <string name="ui_loudness_strength">Strength</string>
+    <string name="ui_match_heading">Match a reference track</string>
+    <string name="ui_match_hint">Pick a track whose sound you like. The app compares its average tonal balance with the track now loaded and sets the 31 bands to close the gap (overall volume is not matched). Analysis uses up to 90 seconds from the middle of each track. You can undo it.</string>
+    <string name="ui_match_choose">Choose a reference track</string>
+    <string name="ui_match_working">Analyzing…</string>
+    <string name="ui_match_undo">Undo the match</string>
+    <string name="player_match_need_track">Load one of your own tracks first. The built-in demo cannot be matched.</string>
+    <string name="player_match_analyze_failed">Could not analyze the audio. The file may be unsupported or silent.</string>
+    <string name="player_match_already_close">The two tracks already have a very similar tonal balance. Nothing was changed.</string>
+    <string name="player_match_done">Set the 31 bands to match the reference track. Check the result by ear; you can undo it from the Tools tab.</string>
 </resources>
