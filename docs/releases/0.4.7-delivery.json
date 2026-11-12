@@ -1,0 +1,25 @@
+{
+  "version": "0.4.7",
+  "source_commit": "5c08ba4",
+  "apk": {
+    "file": "dist/signed/rust-eq-0.4.7-release.apk",
+    "size_bytes": 15714863,
+    "sha256": "2e96a5aa7edd805a38fae63f84b6fa9402285f7609e499a70babc6f8312638d7"
+  },
+  "package": {
+    "file": "dist/rust-eq-0.4.7-package.zip",
+    "size_bytes": 14228483,
+    "sha256": "7fd7318779ac4f92dfecead241c5348964e315f2d4624eece926ebced5fe2858"
+  },
+  "site_package": {
+    "file": "dist/rust-eq-site-0.4.7.zip",
+    "sha256": "cbabb3d40812b677562564d82578d0a9725577d82dc5be6dcb42ae301af8538c",
+    "site_repo": "taotaro1104-commits/kumo",
+    "site_commit": "81fc413"
+  },
+  "rust_workspace_tests": "passed (41)",
+  "android_instrumentation_tests": "44 passed, 0 failed (Android 15 AVD pv_test)",
+  "lint": "not run",
+  "physical_device_tested": false,
+  "publication": "App source pushed to origin/main; site source pushed to kumo origin/master. No public server deployment or Drive upload was performed for 0.4.7."
+}
