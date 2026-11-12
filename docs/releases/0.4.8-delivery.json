@@ -1,0 +1,30 @@
+{
+  "version": "0.4.8",
+  "source_commit": "259f383",
+  "apk": {
+    "file": "dist/signed/rust-eq-0.4.8-release.apk",
+    "size_bytes": 15858223,
+    "sha256": "03d380e3bb74ad9772af8b5433a6ee70dd1a008d53d2e1c66e28cb1e9ce8e785"
+  },
+  "package": {
+    "file": "dist/rust-eq-0.4.8-package.zip",
+    "size_bytes": 14347951,
+    "sha256": "d90e7d3accb028af4f052afd89e462eba054c6c6c42bd55071bb0e8ab6acabb5"
+  },
+  "site_package": {
+    "file": "dist/rust-eq-site-0.4.8.zip",
+    "sha256": "f36e182b97efb7b87713fd84f381f67dfeec6803a8de33f8c1ebd954d9a3fe93",
+    "site_repo": "taotaro1104-commits/kumo",
+    "site_commit": "384dab9",
+    "built_from": "clean export of the committed site tree (excludes unrelated uncommitted working-tree edits)"
+  },
+  "rust_workspace_tests": "passed (52)",
+  "jvm_unit_tests": "passed",
+  "android_instrumentation_tests": "54 passed, 0 failed (Android 15 AVD pv_test, run on source commit db270d0; 259f383 only changes the version)",
+  "lint": "passed (debug variant)",
+  "physical_device_tested": false,
+  "permissions_added": [
+    "android.permission.RECORD_AUDIO (requested only when room calibration is started)"
+  ],
+  "publication": "App source pushed to origin/main; site source pushed to kumo origin/master. No public server deployment or Drive upload was performed for 0.4.8."
+}
