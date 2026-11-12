@@ -30,8 +30,15 @@ data class PlayerState(
     val ab: AbState? = null,
     val matching: Boolean = false, val canUndoMatch: Boolean = false,
     val bpm: Float? = null, val bpmBusy: Boolean = false,
+    val hearing: HearingUi? = null, val room: RoomUi? = null,
     val profilesOn: Boolean = false, val profileKeys: Set<String> = emptySet(), val activeProfile: String? = null, val outputKind: OutputKind = OutputKind.OTHER,
 )
+
+/** Hearing-test progress for the UI; [gains] is set once finished. */
+data class HearingUi(val frequency: Float, val levelDb: Float, val step: Int, val total: Int, val finished: Boolean = false, val gains: List<Float>? = null)
+
+/** Room-calibration progress: measuring, or finished with proposed [gains]. */
+data class RoomUi(val busy: Boolean, val gains: List<Float>? = null)
 
 /** Which sound the A/B (ABX) panel is currently playing. X is a hidden A or B. */
 enum class AbSlot { A, B, X }
@@ -175,6 +182,83 @@ class PlayerController(private val app: Application) {
             dirty = true
             persistSoundSettings()
         }
+    }
+
+    // ---- Hearing test: ascending-level thresholds -> personal 31-band compensation ----
+    private var hearingJob: Job? = null
+    @Volatile private var hearingHeard = false
+
+    fun hearingStart() {
+        if (abActive || hearingJob?.isActive == true) return
+        hearingJob = viewModelScope.launch {
+            pauseNow()
+            val session = HearingTestSession()
+            val total = HearingProfile.testFrequencies.size
+            try {
+                while (!session.finished) {
+                    mutable.update { it.copy(hearing = HearingUi(session.frequency, session.levelDb, session.index, total)) }
+                    hearingHeard = false
+                    ToneOutput.pulse(session.frequency, session.levelDb)
+                    delay(700)
+                    if (hearingHeard) session.heard() else session.notHeard()
+                }
+                val gains = HearingProfile.gains31(session.thresholds).toList()
+                mutable.update { it.copy(hearing = HearingUi(0f, 0f, total, total, finished = true, gains = gains)) }
+            } catch (e: CancellationException) {
+                mutable.update { it.copy(hearing = null) }
+                throw e
+            } catch (e: Exception) {
+                mutable.update { it.copy(hearing = null, message = uiText(R.string.player_hearing_failed)) }
+            }
+        }
+    }
+
+    /** The listener pressed "I hear it"; consumed after the current tone and its pause. */
+    fun hearingHeard() { hearingHeard = true }
+
+    fun hearingCancel() { hearingJob?.cancel(); mutable.update { it.copy(hearing = null) } }
+
+    fun hearingApply() {
+        val gains = mutable.value.hearing?.gains ?: return
+        if (abActive) return
+        val before = mutable.value.config
+        configure { EqMatch.toConfig(it, gains.toFloatArray()) }; select(0)
+        matchUndo = before
+        mutable.update { it.copy(hearing = null, canUndoMatch = true, message = uiText(R.string.player_hearing_applied)) }
+    }
+
+    // ---- Room calibration: pink noise out, microphone in, conservative corrective EQ ----
+    private var roomJob: Job? = null
+
+    fun roomMeasure() {
+        if (abActive || roomJob?.isActive == true || mutable.value.hearing != null) return
+        roomJob = viewModelScope.launch {
+            pauseNow()
+            mutable.update { it.copy(room = RoomUi(busy = true), message = null) }
+            runCatching {
+                val result = RoomMeasurement.run(app)
+                if (!RoomCalibration.isUsable(result.signalDb, result.ambientDb)) throw UiTextException(uiText(R.string.player_room_too_quiet))
+                RoomCalibration.gains(result.signalDb).toList()
+            }.onSuccess { gains ->
+                mutable.update { it.copy(room = RoomUi(busy = false, gains = gains)) }
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                mutable.update { it.copy(room = null, message = e.asUiText(R.string.player_room_failed)) }
+            }
+        }
+    }
+
+    fun roomDenied() { mutable.update { it.copy(message = uiText(R.string.player_room_permission_denied)) } }
+
+    fun roomClose() { roomJob?.cancel(); mutable.update { it.copy(room = null) } }
+
+    fun roomApply() {
+        val gains = mutable.value.room?.gains ?: return
+        if (abActive) return
+        val before = mutable.value.config
+        configure { EqMatch.addTo(it, gains.toFloatArray()) }
+        matchUndo = before
+        mutable.update { it.copy(room = null, canUndoMatch = true, message = uiText(R.string.player_room_applied)) }
     }
 
     // ---- Automatic profiles: this track > night > output device ----
