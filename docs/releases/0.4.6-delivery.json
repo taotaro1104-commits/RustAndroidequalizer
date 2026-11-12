@@ -18,7 +18,7 @@
     "site_commit": "4709528"
   },
   "rust_workspace_tests": "passed",
-  "android_instrumentation_tests": "not run",
+  "android_instrumentation_tests": "43 passed on Android 15 AVD after the fix in e294606; package zip predates this record",
   "lint": "not run",
   "publication": "App source pushed to origin/main; site source pushed to kumo origin/master. No public server deployment, Drive upload or device testing was performed for 0.4.6."
 }

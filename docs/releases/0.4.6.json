@@ -22,7 +22,8 @@
   ],
   "rust_workspace_tests": "passed",
   "android_main_and_androidtest_kotlin_compile": "passed",
-  "android_instrumentation_tests": "not run for 0.4.6",
+  "android_instrumentation_tests": "43 passed, 0 failed (Android 15 AVD pv_test, API 35)",
   "lint": "not run for 0.4.6",
-  "listening_evaluation": "not performed"
+  "listening_evaluation": "not performed",
+  "android_tests_passed": 43
 }
