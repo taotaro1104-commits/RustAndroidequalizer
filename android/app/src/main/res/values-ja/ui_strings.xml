@@ -274,4 +274,25 @@
     <string name="player_room_no_signal">使える信号を録音できませんでした。</string>
     <string name="player_room_failed">部屋の測定に失敗しました。</string>
     <string name="player_room_applied">部屋の補正を適用しました。ツールタブから元に戻せます。</string>
+    <string name="ui_fdn_heading">ルームリバーブを加える</string>
+    <string name="ui_fdn">ルームリバーブ</string>
+    <string name="ui_fdn_hint">密で滑らかな部屋の響きを加えます（4ライン FDN 方式）。エコーと併用できます。</string>
+    <string name="ui_fdn_mix">リバーブの量</string>
+    <string name="ui_fdn_decay">残響時間</string>
+    <string name="ui_fdn_damping">響きの暗さ</string>
+    <string name="ui_exciter_heading">高域に輝きを足す（エキサイター）</string>
+    <string name="ui_exciter">ハーモニック・エキサイター</string>
+    <string name="ui_exciter_hint">高域にやわらかい倍音を足して、低音を増やさずに空気感と存在感を出します。少なめにお使いください。</string>
+    <string name="ui_exciter_amount">量</string>
+    <string name="ui_exciter_hz">効かせる周波数（これ以上）</string>
+    <string name="ui_dyneq_heading">大きい低音だけ抑える（ダイナミックEQ）</string>
+    <string name="ui_dyneq">ダイナミック低音コントロール</string>
+    <string name="ui_dyneq_hint">低音が大きいときだけ低音を下げます。小さい場面では厚みが残り、中高域には触れません。</string>
+    <string name="ui_dyneq_range">最大のカット量</string>
+    <string name="ui_dyneq_hz">低音の範囲（この周波数まで）</string>
+    <string name="ui_dyneq_threshold">効き始める大きさ</string>
+    <string name="ui_dyneq_ratio">強さ（レシオ）</string>
+    <string name="ui_tp_heading">True Peak リミッター</string>
+    <string name="ui_tp">ピークでの歪みを防ぐ</string>
+    <string name="ui_tp_hint">約1 ms 先読みし、サンプルの間に現れるピークも検出します。強い低音ブーストや疑似BASS 200% での歪みを減らします。約1 msの遅延が加わります。</string>
 </resources>

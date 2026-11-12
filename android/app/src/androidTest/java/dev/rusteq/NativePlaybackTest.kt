@@ -81,9 +81,10 @@ class NativePlaybackTest {
 
     @Test fun echoSettingsRoundTripAreValidatedAndAcceptedByNativeEngine() {
         val echo = EqConfig(echoMix = .6f, echoTimeMs = 450f, echoFeedback = .5f)
-        assertEquals(107, echo.packed().size)
+        assertEquals(117, echo.packed().size)
         assertEquals(echo, EqConfig.fromJson(echo.toJson()))
         assertTrue(nativeEngine.configure(echo.packed()))
+        assertTrue(nativeEngine.configure(echo.packed().copyOf(107)))
         assertTrue(nativeEngine.configure(echo.packed().copyOf(104)))
         assertTrue(nativeEngine.configure(echo.packed().copyOf(102)))
         assertFalse(nativeEngine.configure(FloatArray(105)))
@@ -96,7 +97,7 @@ class NativePlaybackTest {
     @Test fun loudnessStrengthRoundTripsAndIsValidated() {
         val c = EqConfig(loudnessStrength = .6f)
         assertEquals(c, EqConfig.fromJson(c.toJson()))
-        assertEquals(107, c.packed().size) // not sent to the engine; derived by LoudnessCompensation
+        assertEquals(117, c.packed().size) // not sent to the engine; derived by LoudnessCompensation
         val base = org.json.JSONObject(c.toJson())
         assertEquals(0f, EqConfig.fromJson(org.json.JSONObject(base.toString()).apply { remove("loudnessStrength") }.toString()).loudnessStrength, 0f)
         for (bad in listOf(-.1, 1.5)) assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(base.toString()).put("loudnessStrength", bad).toString()) }.isFailure)

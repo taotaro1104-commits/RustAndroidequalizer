@@ -32,6 +32,20 @@ pub struct Config {
     pub echo_mix: f32,
     pub echo_time_ms: f32,
     pub echo_feedback: f32,
+    /// Room reverb wet level 0..1 (0 = off), RT60 in seconds and damping 0..1.
+    pub reverb_mix: f32,
+    pub reverb_decay_s: f32,
+    pub reverb_damping: f32,
+    /// Harmonic exciter amount 0..1 (0 = off) and the frequency above which it works.
+    pub exciter_amount: f32,
+    pub exciter_hz: f32,
+    /// Dynamic low-band EQ: maximum cut in dB (0 = off), band edge, threshold and ratio.
+    pub dyn_eq_range_db: f32,
+    pub dyn_eq_hz: f32,
+    pub dyn_eq_threshold_db: f32,
+    pub dyn_eq_ratio: f32,
+    /// Look-ahead true-peak limiter (otherwise the zero-latency sample-peak limiter).
+    pub true_peak_limiter: bool,
 }
 
 impl Default for Config {
@@ -56,6 +70,16 @@ impl Default for Config {
             echo_mix: 0.0,
             echo_time_ms: 300.0,
             echo_feedback: 0.35,
+            reverb_mix: 0.0,
+            reverb_decay_s: 1.8,
+            reverb_damping: 0.5,
+            exciter_amount: 0.0,
+            exciter_hz: 3500.0,
+            dyn_eq_range_db: 0.0,
+            dyn_eq_hz: 150.0,
+            dyn_eq_threshold_db: -30.0,
+            dyn_eq_ratio: 3.0,
+            true_peak_limiter: false,
         }
     }
 }

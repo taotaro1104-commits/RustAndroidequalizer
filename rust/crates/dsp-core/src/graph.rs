@@ -1,6 +1,10 @@
 use crate::biquad::{Biquad, Coefficients};
+use crate::dyneq::{DynEq, PreparedDynEq};
 use crate::dynamics::Dynamics;
 use crate::echo::{Echo, PreparedEcho};
+use crate::exciter::{Exciter, PreparedExciter};
+use crate::limiter::TruePeakLimiter;
+use crate::reverb::{PreparedReverb, Reverb};
 use crate::params::{bounded, clean, Config, SpatialMode, MAX_BANDS};
 use crate::virtual_bass::{PreparedBass, VirtualBass};
 
@@ -21,6 +25,10 @@ pub struct PreparedConfig {
     limiter_release: f32,
     bass: PreparedBass,
     echo: PreparedEcho,
+    reverb: PreparedReverb,
+    exciter: PreparedExciter,
+    dyneq: PreparedDynEq,
+    true_peak: bool,
 }
 
 impl PreparedConfig {
@@ -55,6 +63,21 @@ impl PreparedConfig {
                 config.echo_feedback,
                 sr,
             ),
+            reverb: PreparedReverb::new(
+                config.reverb_mix,
+                config.reverb_decay_s,
+                config.reverb_damping,
+                sr,
+            ),
+            exciter: PreparedExciter::new(config.exciter_amount, config.exciter_hz, sr),
+            dyneq: PreparedDynEq::new(
+                config.dyn_eq_range_db,
+                config.dyn_eq_hz,
+                config.dyn_eq_threshold_db,
+                config.dyn_eq_ratio,
+                sr,
+            ),
+            true_peak: config.true_peak_limiter,
         }
     }
 }
@@ -109,6 +132,10 @@ pub struct Dsp {
     fade_length: usize,
     output_dynamics: Dynamics,
     echo: Echo,
+    reverb: Reverb,
+    exciter: Exciter,
+    dyneq: DynEq,
+    peak_limiter: TruePeakLimiter,
 }
 
 impl Dsp {
@@ -128,6 +155,10 @@ impl Dsp {
             fade_length: (bounded(sample_rate, 48000.0, 8000.0, 384000.0) * 0.020) as usize,
             output_dynamics: Dynamics::default(),
             echo: Echo::new(sample_rate),
+            reverb: Reverb::new(sample_rate),
+            exciter: Exciter::default(),
+            dyneq: DynEq::default(),
+            peak_limiter: TruePeakLimiter::new(sample_rate),
         }
     }
 
@@ -168,18 +199,24 @@ impl Dsp {
         let output = if self.active.config.bypass {
             output
         } else {
-            self.echo.process(output, self.active.config.echo)
+            let c = self.active.config;
+            let shaped = self.dyneq.process(output, c.dyneq);
+            let excited = self.exciter.process(shaped, c.exciter);
+            let echoed = self.echo.process(excited, c.echo);
+            self.reverb.process(echoed, c.reverb)
         };
         output.map(clean)
     }
 
     pub fn limit_output(&mut self, input: [f32; 2]) -> [f32; 2] {
         let input = input.map(clean);
-        let out = if self.active.config.bypass {
+        let c = self.active.config;
+        let out = if c.bypass {
             input
+        } else if c.true_peak {
+            self.peak_limiter.process(input, c.limiter_release)
         } else {
-            self.output_dynamics
-                .limit(input, self.active.config.limiter_release)
+            self.output_dynamics.limit(input, c.limiter_release)
         };
         out.map(|x| clean(x).clamp(-0.999, 0.999))
     }

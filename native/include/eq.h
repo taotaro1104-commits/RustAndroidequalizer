@@ -21,7 +21,10 @@ typedef struct EqStats {
 EqHandle *eq_create(uint32_t sample_rate);
 void eq_destroy(EqHandle *handle);
 void eq_process(EqHandle *handle, float *output, uint32_t frames);
-// Packed configuration: 102 legacy floats, 104 floats or 107 floats. Prefix unchanged.
+// Packed configuration: 102 legacy floats, 104, 107 or 117 floats.
+// [107] reverb mix 0..1 (0 = off), [108] RT60 0.2..6 s, [109] damping 0..1, [110] exciter amount 0..1 (0 = off),
+// [111] exciter Hz 1500..9000, [112] dynamic-EQ max cut 0..18 dB (0 = off), [113] band edge Hz 40..600,
+// [114] threshold dB -60..0, [115] ratio 1..10, [116] true-peak limiter 0/1. Prefix unchanged.
 // [104] echo mix 0..1 (0 = off), [105] echo time 20..1000 ms, [106] echo feedback 0..0.85.
 // [102] virtual bass amount 0..1, [103] extraction Hz 60..180.
 // Legacy callers default to bass off / 110 Hz. Control thread only.

@@ -28,13 +28,31 @@ data class EqConfig(
     val echoFeedback: Float = .35f,
     /** Volume-linked loudness compensation strength 0..1 (0 = off); applied by [LoudnessCompensation], not sent to the engine. */
     val loudnessStrength: Float = 0f,
+    /** Room reverb (FDN): wet level 0..1 (0 = off), RT60 seconds, damping 0 (bright)..1 (dark). */
+    val reverbMix: Float = 0f,
+    val reverbDecayS: Float = 1.8f,
+    val reverbDamping: Float = .5f,
+    /** Harmonic exciter: amount 0..1 (0 = off) and the frequency above which it works. */
+    val exciterAmount: Float = 0f,
+    val exciterHz: Float = 3500f,
+    /** Dynamic low-band EQ: maximum cut dB (0 = off), band edge, threshold and ratio. */
+    val dynEqRangeDb: Float = 0f,
+    val dynEqHz: Float = 150f,
+    val dynEqThresholdDb: Float = -30f,
+    val dynEqRatio: Float = 3f,
+    /** Look-ahead true-peak limiter (about 1 ms delay) instead of the sample-peak limiter. */
+    val truePeakLimiter: Boolean = true,
 ) {
-    fun packed(): FloatArray = FloatArray(107).also { v ->
+    fun packed(): FloatArray = FloatArray(117).also { v ->
         v[0] = preamp; v[1] = if (bypass) 1f else 0f; v[2] = bands.size.toFloat()
         v[3] = if (compressor) 1f else 0f; v[4] = threshold; v[5] = ratio
         v[6] = spatial.toFloat(); v[7] = width; v[8] = crossfeed
         v[102] = virtualBassAmount; v[103] = virtualBassHz
         v[104] = echoMix; v[105] = echoTimeMs; v[106] = echoFeedback
+        v[107] = reverbMix; v[108] = reverbDecayS; v[109] = reverbDamping
+        v[110] = exciterAmount; v[111] = exciterHz
+        v[112] = dynEqRangeDb; v[113] = dynEqHz; v[114] = dynEqThresholdDb; v[115] = dynEqRatio
+        v[116] = if (truePeakLimiter) 1f else 0f
         bands.forEachIndexed { i, b -> v[9+i*3] = b.hz; v[10+i*3] = b.db; v[11+i*3] = b.q }
     }
 
@@ -45,6 +63,10 @@ data class EqConfig(
         put("virtualBassAmount", virtualBassAmount); put("virtualBassHz", virtualBassHz)
         put("echoMix", echoMix); put("echoTimeMs", echoTimeMs); put("echoFeedback", echoFeedback)
         put("loudnessStrength", loudnessStrength)
+        put("reverbMix", reverbMix); put("reverbDecayS", reverbDecayS); put("reverbDamping", reverbDamping)
+        put("exciterAmount", exciterAmount); put("exciterHz", exciterHz)
+        put("dynEqRangeDb", dynEqRangeDb); put("dynEqHz", dynEqHz); put("dynEqThresholdDb", dynEqThresholdDb); put("dynEqRatio", dynEqRatio)
+        put("truePeakLimiter", truePeakLimiter)
         put("bands", JSONArray().apply { bands.forEach { put(JSONArray(listOf(it.hz, it.db, it.q))) } })
     }.toString()
 
@@ -54,6 +76,8 @@ data class EqConfig(
         const val MIN_ECHO_MS = 20f
         const val MAX_ECHO_MS = 1000f
         const val MAX_ECHO_FEEDBACK = .85f
+        const val MIN_REVERB_S = .2f
+        const val MAX_REVERB_S = 6f
 
         fun defaultBands(count: Int): List<EqBand> {
             require(count in 1..31)
@@ -85,6 +109,16 @@ data class EqConfig(
                 echoTimeMs = finite(j.optDouble("echoTimeMs", 300.0), MIN_ECHO_MS, MAX_ECHO_MS),
                 echoFeedback = finite(j.optDouble("echoFeedback", .35), 0f, MAX_ECHO_FEEDBACK),
                 loudnessStrength = finite(j.optDouble("loudnessStrength", 0.0), 0f, 1f),
+                reverbMix = finite(j.optDouble("reverbMix", 0.0), 0f, 1f),
+                reverbDecayS = finite(j.optDouble("reverbDecayS", 1.8), MIN_REVERB_S, MAX_REVERB_S),
+                reverbDamping = finite(j.optDouble("reverbDamping", .5), 0f, 1f),
+                exciterAmount = finite(j.optDouble("exciterAmount", 0.0), 0f, 1f),
+                exciterHz = finite(j.optDouble("exciterHz", 3500.0), 1500f, 9000f),
+                dynEqRangeDb = finite(j.optDouble("dynEqRangeDb", 0.0), 0f, 18f),
+                dynEqHz = finite(j.optDouble("dynEqHz", 150.0), 40f, 600f),
+                dynEqThresholdDb = finite(j.optDouble("dynEqThresholdDb", -30.0), -60f, 0f),
+                dynEqRatio = finite(j.optDouble("dynEqRatio", 3.0), 1f, 10f),
+                truePeakLimiter = j.optBoolean("truePeakLimiter", true),
             )
         }
 

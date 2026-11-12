@@ -62,7 +62,8 @@ pub unsafe extern "C" fn eq_process(handle: *mut EqHandle, output: *mut f32, fra
 /// # Safety
 /// Handle must be live. values points to count readable floats for this call.
 /// Prefix: 9 scalars + 31 (Hz, dB, Q) triples. Optional final two scalars
-/// are virtual-bass amount and extraction Hz; three more (107 total) are echo mix, time ms and feedback.
+/// are virtual-bass amount and extraction Hz; three more (107 total) are echo mix, time ms and feedback;
+/// ten more (117 total) are reverb mix/decay/damping, exciter amount/Hz, dynamic-EQ range/Hz/threshold/ratio and the true-peak limiter flag.
 /// Legacy 102/104-float callers leave the missing effects off.
 #[no_mangle]
 pub unsafe extern "C" fn eq_configure(
@@ -76,6 +77,7 @@ pub unsafe extern "C" fn eq_configure(
             (9 + MAX_BANDS * 3) as u32,
             (11 + MAX_BANDS * 3) as u32,
             (14 + MAX_BANDS * 3) as u32,
+            (24 + MAX_BANDS * 3) as u32,
         ]
         .contains(&count)
     {
@@ -101,6 +103,16 @@ pub unsafe extern "C" fn eq_configure(
         echo_mix: v.get(104).copied().unwrap_or(0.0),
         echo_time_ms: v.get(105).copied().unwrap_or(300.0),
         echo_feedback: v.get(106).copied().unwrap_or(0.35),
+        reverb_mix: v.get(107).copied().unwrap_or(0.0),
+        reverb_decay_s: v.get(108).copied().unwrap_or(1.8),
+        reverb_damping: v.get(109).copied().unwrap_or(0.5),
+        exciter_amount: v.get(110).copied().unwrap_or(0.0),
+        exciter_hz: v.get(111).copied().unwrap_or(3500.0),
+        dyn_eq_range_db: v.get(112).copied().unwrap_or(0.0),
+        dyn_eq_hz: v.get(113).copied().unwrap_or(150.0),
+        dyn_eq_threshold_db: v.get(114).copied().unwrap_or(-30.0),
+        dyn_eq_ratio: v.get(115).copied().unwrap_or(3.0),
+        true_peak_limiter: v.get(116).map(|x| *x > 0.5).unwrap_or(false),
         bands: std::array::from_fn(|i| Band {
             frequency: v[9 + i * 3],
             gain_db: v[10 + i * 3],

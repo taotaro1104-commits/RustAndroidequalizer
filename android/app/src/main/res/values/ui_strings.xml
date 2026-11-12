@@ -276,4 +276,25 @@
     <string name="player_room_no_signal">No usable signal was recorded.</string>
     <string name="player_room_failed">The room measurement failed.</string>
     <string name="player_room_applied">Applied the room correction. You can undo it from the Tools tab.</string>
+    <string name="ui_fdn_heading">Add room reverb</string>
+    <string name="ui_fdn">Room reverb</string>
+    <string name="ui_fdn_hint">A dense, smooth room tail (4-line feedback delay network). Works with the echo.</string>
+    <string name="ui_fdn_mix">Reverb amount</string>
+    <string name="ui_fdn_decay">Decay time</string>
+    <string name="ui_fdn_damping">Darkness of the tail</string>
+    <string name="ui_exciter_heading">Add sparkle (exciter)</string>
+    <string name="ui_exciter">Harmonic exciter</string>
+    <string name="ui_exciter_hint">Adds soft harmonics to the highs for more air and presence, without raising the bass. Use a small amount.</string>
+    <string name="ui_exciter_amount">Amount</string>
+    <string name="ui_exciter_hz">Works above</string>
+    <string name="ui_dyneq_heading">Tame loud bass only (dynamic EQ)</string>
+    <string name="ui_dyneq">Dynamic bass control</string>
+    <string name="ui_dyneq_hint">Turns the bass down only while it is loud, so quiet passages keep their weight and mids and highs are not touched.</string>
+    <string name="ui_dyneq_range">Maximum cut</string>
+    <string name="ui_dyneq_hz">Bass range up to</string>
+    <string name="ui_dyneq_threshold">Starts above</string>
+    <string name="ui_dyneq_ratio">Strength (ratio)</string>
+    <string name="ui_tp_heading">True-peak limiter</string>
+    <string name="ui_tp">Prevents distortion on peaks</string>
+    <string name="ui_tp_hint">Looks ahead about 1 ms and also catches peaks between samples, so strong bass boost and 200% virtual bass distort less. Adds about 1 ms of delay.</string>
 </resources>

@@ -115,7 +115,11 @@ fun AudioApp(vm: PlayerController) {
                         SectionTitle(stringResource(R.string.ui_space_heading))
                         SpatialPanels(state, vm, { sofaPicker.launch(arrayOf("*/*")) }, { irPicker.launch(arrayOf("audio/*", "application/octet-stream")) })
                         EchoPanel(state.config, vm, state)
+                        ReverbPanel(state.config, vm)
+                        ExciterPanel(state.config, vm)
+                        DynamicEqPanel(state.config, vm)
                         DynamicsPanel(state.config, vm)
+                        LimiterPanel(state.config, vm)
                     }
                     else -> {
                         SectionTitle(stringResource(R.string.ui_tools_heading))
@@ -470,7 +474,7 @@ internal fun ToggleHeading(title: String, description: String, checked: Boolean,
 }
 
 @Composable
-private fun SettingSlider(label: String, valueLabel: String, value: Float, range: ClosedFloatingPointRange<Float>, color: Color = AudioColors.Blue, change: (Float) -> Unit) {
+internal fun SettingSlider(label: String, valueLabel: String, value: Float, range: ClosedFloatingPointRange<Float>, color: Color = AudioColors.Blue, change: (Float) -> Unit) {
     Column {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)

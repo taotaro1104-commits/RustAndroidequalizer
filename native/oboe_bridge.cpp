@@ -13,7 +13,7 @@
 #include "eq.h"
 
 namespace {
-constexpr size_t kConfigSize = 107;
+constexpr size_t kConfigSize = 117;
 constexpr size_t kBins = 128;
 int64_t monotonicNanos() {
     timespec t{};
@@ -195,13 +195,20 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_dev_rusteq_audio_NativeEngine_configure(JNIEnv *env, jobject object, jfloatArray values) {
     if (!values) return JNI_FALSE;
     const jsize count = env->GetArrayLength(values);
-    if (count != 102 && count != 104 && count != static_cast<jsize>(kConfigSize)) return JNI_FALSE;
+    if (count != 102 && count != 104 && count != 107 && count != static_cast<jsize>(kConfigSize)) return JNI_FALSE;
     std::lock_guard<std::mutex> guard(controlMutex);
     auto &bridge = bridges[ownerId(env, object)]; auto &session = bridge.session;
     bridge.cachedConfig.fill(0.0f);
     bridge.cachedConfig[103] = 110.0f;
     bridge.cachedConfig[105] = 300.0f;  // echo time ms (mix 0 = off)
     bridge.cachedConfig[106] = 0.35f;   // echo feedback
+    bridge.cachedConfig[108] = 1.8f;    // reverb RT60 s (mix 0 = off)
+    bridge.cachedConfig[109] = 0.5f;    // reverb damping
+    bridge.cachedConfig[111] = 3500.0f; // exciter Hz (amount 0 = off)
+    bridge.cachedConfig[113] = 150.0f;  // dynamic EQ band edge Hz (range 0 = off)
+    bridge.cachedConfig[114] = -30.0f;  // dynamic EQ threshold dB
+    bridge.cachedConfig[115] = 3.0f;    // dynamic EQ ratio
+    bridge.cachedConfig[116] = 0.0f;    // true-peak limiter off unless the caller sends 117 floats
     env->GetFloatArrayRegion(values, 0, count, bridge.cachedConfig.data());
     if (env->ExceptionCheck()) return JNI_FALSE;
     bridge.haveConfig = true;
