@@ -104,7 +104,7 @@ fun AudioApp(vm: PlayerController) {
                                     PresetTile(preset, state.presetTitle == preset.title, Modifier.weight(1f), compact = true) { vm.applyBuiltinPreset(id) }
                                 }
                             }
-                            state.presetTitle?.let { title -> Text(stringResource(R.string.ui_selected_preset, friendlyPresetTitle(BuiltinPresets.all.firstOrNull { it.title == title }) ?: title), style = MaterialTheme.typography.bodySmall, color = AudioColors.Blue) }
+                            state.presetTitle?.let { title -> Text(stringResource(R.string.ui_selected_preset, friendlyPresetTitle((BuiltinPresets.all + BuiltinPresets31.all).firstOrNull { it.title == title }) ?: title), style = MaterialTheme.typography.bodySmall, color = AudioColors.Blue) }
                         }
                         EqualizerPanel(state, vm)
                         BassPanel(state.config, vm)
@@ -253,7 +253,7 @@ private fun BassPanel(c: EqConfig, vm: PlayerController) {
         }
         Text(stringResource(R.string.ui_bass_hint), style = MaterialTheme.typography.bodySmall, color = AudioColors.Muted)
         if (c.virtualBassAmount > 0f) {
-            SettingSlider(stringResource(R.string.ui_bass_amount), "${(c.virtualBassAmount * 100).roundToInt()}%", c.virtualBassAmount, .01f..1f, AudioColors.Bass) { value -> vm.configure { it.copy(virtualBassAmount = value) } }
+            SettingSlider(stringResource(R.string.ui_bass_amount), "${(c.virtualBassAmount * 100).roundToInt()}%", c.virtualBassAmount, .01f..EqConfig.MAX_BASS_AMOUNT, AudioColors.Bass) { value -> vm.configure { it.copy(virtualBassAmount = value) } }
             SettingSlider(stringResource(R.string.ui_bass_cutoff), "${c.virtualBassHz.roundToInt()} Hz", c.virtualBassHz, 60f..180f, AudioColors.Bass) { value -> vm.configure { it.copy(virtualBassHz = value) } }
         }
     }
@@ -353,6 +353,14 @@ private fun PresetChooser(state: PlayerState, dismiss: () -> Unit, factory: (Str
                         pair.forEach { preset -> PresetTile(preset, state.presetTitle == preset.title, Modifier.weight(1f)) { factory(preset.id) } }
                     }
                 }
+                Text(stringResource(R.string.ui_presets31_heading), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.ui_presets31_hint), style = MaterialTheme.typography.bodySmall)
+                BuiltinPresets31.all.chunked(2).forEach { pair ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        pair.forEach { preset -> PresetTile(preset, state.presetTitle == preset.title, Modifier.weight(1f)) { factory(preset.id) } }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
                 if (state.presetNames.isNotEmpty()) {
                     Text(stringResource(R.string.ui_saved_presets), style = MaterialTheme.typography.titleMedium)
                     state.presetNames.forEach { name ->
@@ -371,7 +379,7 @@ private fun friendlyPresetTitle(preset: BuiltinPreset?): String? = preset?.local
 
 @Composable
 private fun PresetTile(preset: BuiltinPreset, selected: Boolean, modifier: Modifier = Modifier, compact: Boolean = false, click: () -> Unit) {
-    val bass = preset.id in listOf("woofer", "bass", "deep", "electronic")
+    val bass = preset.id in listOf("woofer", "bass", "deep", "electronic", "bass31", "megabass31", "electronic31")
     val color = if (bass) AudioColors.Bass else AudioColors.Blue
     Surface(onClick = click, modifier = modifier, shape = RoundedCornerShape(18.dp), color = if (selected) color.copy(alpha = .10f) else Color.White, border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) color else AudioColors.Line)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

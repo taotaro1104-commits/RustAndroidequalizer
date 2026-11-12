@@ -40,6 +40,14 @@ fn low_tone_gains_second_harmonic_and_amount_scales_it() {
     assert!((magnitude(&high, 60.0) - 0.1).abs() < 0.0001);
 }
 #[test]
+fn strength_above_100_percent_is_stronger_and_clamped_at_200_percent() {
+    let full = magnitude(&tone(1.0, 60.0), 120.0);
+    let strong = magnitude(&tone(2.0, 60.0), 120.0);
+    let clamped = magnitude(&tone(5.0, 60.0), 120.0);
+    assert!((strong / full - 2.0).abs() < 0.02, "ratio {}", strong / full);
+    assert!((clamped - strong).abs() < 1.0e-9);
+}
+#[test]
 fn high_frequencies_are_not_broadly_distorted() {
     let dry = tone(0.0, 4000.0);
     let bass = tone(1.0, 4000.0);

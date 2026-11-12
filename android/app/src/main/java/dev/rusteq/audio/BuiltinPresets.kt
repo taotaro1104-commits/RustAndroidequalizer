@@ -43,5 +43,5 @@ object BuiltinPresets {
         preset("night", "ナイト", "音量差と低音を控えめに", listOf(-4f,-3f,-2f,-1f,0f,1f,1f,0f,-1f,-2f), compressor=true, threshold=-28f, ratio=5f),
         preset("gaming", "ゲーム", "中高域とステレオの広がりを調整", listOf(0f,1f,0f,-1f,0f,1f,2f,2f,1f,0f), spatial=1, width=1.4f),
     )
-    fun find(id: String): BuiltinPreset? = all.firstOrNull { it.id == id }
+    fun find(id: String): BuiltinPreset? = (all + BuiltinPresets31.all).firstOrNull { it.id == id }
 }

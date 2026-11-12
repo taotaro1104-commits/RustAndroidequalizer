@@ -22,6 +22,17 @@ fun BuiltinPreset.localizedTitle(context: Context): String = when (id) {
     "podcast" -> context.getString(R.string.ui_preset_podcast)
     "night" -> context.getString(R.string.ui_preset_night)
     "gaming" -> context.getString(R.string.ui_preset_gaming)
+    "flat31" -> context.getString(R.string.ui_preset31_flat)
+    "rock31" -> context.getString(R.string.ui_preset31_rock)
+    "classical31" -> context.getString(R.string.ui_preset31_classical)
+    "pop31" -> context.getString(R.string.ui_preset31_pop)
+    "jazz31" -> context.getString(R.string.ui_preset31_jazz)
+    "vocal31" -> context.getString(R.string.ui_preset31_vocal)
+    "acoustic31" -> context.getString(R.string.ui_preset31_acoustic)
+    "electronic31" -> context.getString(R.string.ui_preset31_electronic)
+    "treble31" -> context.getString(R.string.ui_preset31_treble)
+    "bass31" -> context.getString(R.string.ui_preset31_bass)
+    "megabass31" -> context.getString(R.string.ui_preset31_megabass)
     else -> title
 }
 
@@ -42,5 +53,16 @@ fun BuiltinPreset.localizedDescription(context: Context): String = when (id) {
     "podcast" -> context.getString(R.string.ui_preset_podcast_description)
     "night" -> context.getString(R.string.ui_preset_night_description)
     "gaming" -> context.getString(R.string.ui_preset_gaming_description)
+    "flat31" -> context.getString(R.string.ui_preset31_flat_description)
+    "rock31" -> context.getString(R.string.ui_preset31_rock_description)
+    "classical31" -> context.getString(R.string.ui_preset31_classical_description)
+    "pop31" -> context.getString(R.string.ui_preset31_pop_description)
+    "jazz31" -> context.getString(R.string.ui_preset31_jazz_description)
+    "vocal31" -> context.getString(R.string.ui_preset31_vocal_description)
+    "acoustic31" -> context.getString(R.string.ui_preset31_acoustic_description)
+    "electronic31" -> context.getString(R.string.ui_preset31_electronic_description)
+    "treble31" -> context.getString(R.string.ui_preset31_treble_description)
+    "bass31" -> context.getString(R.string.ui_preset31_bass_description)
+    "megabass31" -> context.getString(R.string.ui_preset31_megabass_description)
     else -> description
 }

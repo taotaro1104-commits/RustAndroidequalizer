@@ -1,0 +1,28 @@
+{
+  "file": "rust-eq-0.4.6-release.apk",
+  "version": "0.4.6",
+  "version_code": 10,
+  "size_bytes": 15694383,
+  "sha256": "e682b934aceec4b3cd3b37d9c41ff39bb40e670b041eb20ca133168b1b7b2c6e",
+  "certificate_sha256": "6d6162953d457d4568fb69b61e277188d8445ad6cb7c5c9f8531b2e63473e607",
+  "signatures": [
+    "v2",
+    "v3"
+  ],
+  "min_sdk": 29,
+  "target_sdk": 35,
+  "debuggable": false,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "supported_languages": [
+    "en",
+    "ja"
+  ],
+  "rust_workspace_tests": "passed",
+  "android_main_and_androidtest_kotlin_compile": "passed",
+  "android_instrumentation_tests": "not run for 0.4.6",
+  "lint": "not run for 0.4.6",
+  "listening_evaluation": "not performed"
+}

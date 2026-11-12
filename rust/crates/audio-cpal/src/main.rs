@@ -28,8 +28,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "--bass" => {
                 let value = args.next().ok_or("Missing bass amount")?.parse::<f32>()?;
-                if !value.is_finite() || !(0.0..=1.0).contains(&value) {
-                    return Err("Bass must be 0–1".into());
+                if !value.is_finite() || !(0.0..=2.0).contains(&value) {
+                    return Err("Bass must be 0–2".into());
                 }
                 config.virtual_bass_amount = value;
             }

@@ -162,4 +162,28 @@
     <plurals name="ui_bands">
         <item quantity="other">%1$d バンド</item>
     </plurals>
+    <string name="ui_presets31_heading">31バンド用プリセット</string>
+    <string name="ui_presets31_hint">31バンドEQ用です。選ぶとEQが31バンドになります。</string>
+    <string name="ui_preset31_flat">フラット（31バンド）</string>
+    <string name="ui_preset31_flat_description">31バンドの比較基準</string>
+    <string name="ui_preset31_rock">ロック（31バンド）</string>
+    <string name="ui_preset31_rock_description">低音と高音にメリハリ</string>
+    <string name="ui_preset31_classical">クラシック（31バンド）</string>
+    <string name="ui_preset31_classical_description">穏やかな低域と高域の広がり</string>
+    <string name="ui_preset31_pop">ポップ（31バンド）</string>
+    <string name="ui_preset31_pop_description">低音と声をバランスよく調整</string>
+    <string name="ui_preset31_jazz">ジャズ（31バンド）</string>
+    <string name="ui_preset31_jazz_description">低域の厚みと自然な輪郭</string>
+    <string name="ui_preset31_vocal">ボーカル（31バンド）</string>
+    <string name="ui_preset31_vocal_description">声の帯域を聴き取りやすく調整</string>
+    <string name="ui_preset31_acoustic">アコースティック（31バンド）</string>
+    <string name="ui_preset31_acoustic_description">弦や声の存在感を調整</string>
+    <string name="ui_preset31_electronic">エレクトロニック（31バンド）</string>
+    <string name="ui_preset31_electronic_description">低音のリズムと高域を強調</string>
+    <string name="ui_preset31_treble">クリア（31バンド）</string>
+    <string name="ui_preset31_treble_description">高音側の輪郭を調整</string>
+    <string name="ui_preset31_bass">ベースブースト（31バンド）</string>
+    <string name="ui_preset31_bass_description">超低域〜低域を強く持ち上げ、疑似BASSも加える</string>
+    <string name="ui_preset31_megabass">メガベース（31バンド）</string>
+    <string name="ui_preset31_megabass_description">EQ と疑似BASS 150% で最大級の低音</string>
 </resources>

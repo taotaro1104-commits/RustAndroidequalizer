@@ -40,6 +40,9 @@ data class EqConfig(
     }.toString()
 
     companion object {
+        /** Bass strength upper bound (200%); mirrors dsp-core MAX_BASS_AMOUNT. */
+        const val MAX_BASS_AMOUNT = 2f
+
         fun defaultBands(count: Int): List<EqBand> {
             require(count in 1..31)
             if (count == 1) return listOf(EqBand(1000f, q = 1.4f))
@@ -64,7 +67,7 @@ data class EqConfig(
                 compressor = j.optBoolean("compressor", false), threshold = finite(j.optDouble("threshold", -18.0), -60f, 0f),
                 ratio = finite(j.optDouble("ratio", 3.0), 1f, 20f), spatial = j.optInt("spatial", 0).coerceIn(0, 2),
                 width = finite(j.optDouble("width", 1.3), 0f, 2f), crossfeed = finite(j.optDouble("crossfeed", .25), 0f, .5f),
-                virtualBassAmount = finite(j.optDouble("virtualBassAmount", 0.0), 0f, 1f),
+                virtualBassAmount = finite(j.optDouble("virtualBassAmount", 0.0), 0f, MAX_BASS_AMOUNT),
                 virtualBassHz = finite(j.optDouble("virtualBassHz", 110.0), 60f, 180f),
             )
         }

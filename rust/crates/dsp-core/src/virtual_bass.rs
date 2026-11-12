@@ -3,6 +3,10 @@
 use crate::biquad::Coefficients;
 use crate::params::{bounded, clean};
 
+/// Upper bound of the bass strength. 1.0 is the original maximum; values up
+/// to 2.0 add proportionally stronger harmonics (the final limiter still applies).
+pub const MAX_BASS_AMOUNT: f32 = 2.0;
+
 #[derive(Clone, Copy)]
 pub struct PreparedBass {
     pub amount: f32,
@@ -15,7 +19,7 @@ impl PreparedBass {
         let sr = bounded(sample_rate, 48000.0, 8000.0, 384000.0);
         let hz = bounded(frequency, 110.0, 60.0, 180.0);
         Self {
-            amount: bounded(amount, 0.0, 0.0, 1.0),
+            amount: bounded(amount, 0.0, 0.0, MAX_BASS_AMOUNT),
             low: pass(hz, sr, false),
             high: pass(hz * 0.8, sr, true),
             harmonics: pass(hz * 4.0, sr, false),

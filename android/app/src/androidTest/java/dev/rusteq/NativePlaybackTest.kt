@@ -54,7 +54,28 @@ class NativePlaybackTest {
         assertFalse(nativeEngine.configure(FloatArray(103)))
         val legacy = org.json.JSONObject(woofer.toJson()).put("version",1).apply { remove("virtualBassAmount"); remove("virtualBassHz") }
         assertEquals(0f,EqConfig.fromJson(legacy.toString()).virtualBassAmount,0f)
-        assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(woofer.toJson()).put("virtualBassAmount",2).toString()) }.isFailure)
+        assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(woofer.toJson()).put("virtualBassAmount",2.5).toString()) }.isFailure)
+    }
+
+    @Test fun builtin31BandPresetsAreValidAndBassCanReachTwoHundredPercent() {
+        val presets = dev.rusteq.audio.BuiltinPresets31.all
+        assertTrue(presets.size >= 10)
+        assertEquals(presets.size, presets.map { it.id }.toSet().size)
+        for (preset in presets) {
+            val config = preset.config
+            assertEquals(31, config.bands.size)
+            assertEquals(EqConfig.defaultBands(31).map { it.hz }, config.bands.map { it.hz })
+            assertEquals(config, EqConfig.fromJson(config.toJson()))
+            assertTrue(config.preamp.isFinite() && config.preamp <= -6f)
+            for (i in 0..128) assertTrue(config.responseDb(20f*kotlin.math.exp(kotlin.math.ln(1000f)*i/128f),48000f) <= -1.8f)
+            assertTrue(nativeEngine.configure(config.packed()))
+            assertSame(preset, dev.rusteq.audio.BuiltinPresets.find(preset.id))
+        }
+        val mega = dev.rusteq.audio.BuiltinPresets.find("megabass31")!!.config
+        assertTrue(mega.virtualBassAmount > 1f)
+        val strong = EqConfig(virtualBassAmount = 2f)
+        assertEquals(strong, EqConfig.fromJson(strong.toJson()))
+        assertTrue(nativeEngine.configure(strong.packed()))
     }
 
     @Test fun demoUsesNativeCallbackAndPausePreservesPosition() {

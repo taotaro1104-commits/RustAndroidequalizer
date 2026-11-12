@@ -13,7 +13,7 @@ Android 10（API 29）以上向けのアプリ内音楽プレーヤー / イコ�
 - 10 / 31 バンド PEQ、Hz / gain / Q 調整、対数周波数グラフとドラッグ操作、preamp、bypass。
 - 明るい配色の「音づくり・空間・ツール」画面。音質カーブ付きプリセット、折りたためる詳細調整、大きな文字への対応（[画面](docs/screenshots/README.md)、[検証](docs/ui-design-validation.md)）。
 - ステレオ連動 compressor、sample-peak limiter、M/S widener、低域 crossfeed。
-- 16種類の標準プリセットと、倍音生成による疑似BASS / ウーファー。量・対象帯域を調整し、JSONに保存できます（[設定と仕組み](docs/presets-bass.md)）。
+- 16種類の10バンド標準プリセット、11種類の31バンド用プリセット、倍音生成による疑似BASS（最大200%）。量・対象帯域を調整し、JSONに保存できます（[設定と仕組み](docs/presets-bass.md)）。
 - 設定更新時の 20 ms クロスフェード。係数計算は control thread、処理は可変フレーム数対応。
 - プリセットの端末内保存・復元・削除、JSON 書き出し、AutoEQ が生成した **PK フィルター設定テキスト**と独自 JSON のインポート。
 - 測定 / target CSV から 5 / 10 バンドの PEQ と preamp を生成する独立した AutoEQ 最適化器。worker 上で計算し、形状 RMSE を表示（[形式とアルゴリズム](docs/autoeq.md)）。
