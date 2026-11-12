@@ -1,0 +1,36 @@
+{
+  "file": "rust-eq-0.4.8-release.apk",
+  "version": "0.4.8",
+  "version_code": 12,
+  "size_bytes": 15858223,
+  "sha256": "03d380e3bb74ad9772af8b5433a6ee70dd1a008d53d2e1c66e28cb1e9ce8e785",
+  "certificate_sha256": "6d6162953d457d4568fb69b61e277188d8445ad6cb7c5c9f8531b2e63473e607",
+  "signatures": [
+    "v2",
+    "v3"
+  ],
+  "min_sdk": 29,
+  "target_sdk": 35,
+  "debuggable": false,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "supported_languages": [
+    "en",
+    "ja"
+  ],
+  "permissions_added": [
+    "android.permission.RECORD_AUDIO (requested only when room calibration is started)"
+  ],
+  "rust_workspace_tests": "passed (52)",
+  "jvm_unit_tests": "passed",
+  "android_tests_passed": 54,
+  "android_tests_failed": 0,
+  "android_tests_skipped": 0,
+  "tested_android_api": 35,
+  "tested_on_unversioned_commit": "db270d0 (identical sources; only versionCode/versionName changed afterwards)",
+  "lint": "passed (debug variant, 0 errors)",
+  "listening_evaluation": "not performed",
+  "physical_device_tested": false
+}
