@@ -186,4 +186,10 @@
     <string name="ui_preset31_bass_description">超低域〜低域を強く持ち上げ、疑似BASSも加える</string>
     <string name="ui_preset31_megabass">メガベース（31バンド）</string>
     <string name="ui_preset31_megabass_description">EQ と疑似BASS 150% で最大級の低音</string>
+    <string name="ui_echo_heading">エコーを加える</string>
+    <string name="ui_echo">エコー</string>
+    <string name="ui_echo_hint">少し遅れて音を繰り返します。アプリ内の再生に使えます。</string>
+    <string name="ui_echo_mix">エコーの量</string>
+    <string name="ui_echo_time">エコーの間隔</string>
+    <string name="ui_echo_feedback">繰り返し（フィードバック）</string>
 </resources>

@@ -30,6 +30,7 @@ fn callback_allocates_and_frees_nothing_even_during_updates() {
     control.set_playing(true);
     let mut config = Config {
         virtual_bass_amount: 0.75,
+        echo_mix: 0.5,
         ..Default::default()
     };
     for i in 0..40 {

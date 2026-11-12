@@ -1,5 +1,6 @@
 use crate::biquad::{Biquad, Coefficients};
 use crate::dynamics::Dynamics;
+use crate::echo::{Echo, PreparedEcho};
 use crate::params::{bounded, clean, Config, SpatialMode, MAX_BANDS};
 use crate::virtual_bass::{PreparedBass, VirtualBass};
 
@@ -19,6 +20,7 @@ pub struct PreparedConfig {
     release: f32,
     limiter_release: f32,
     bass: PreparedBass,
+    echo: PreparedEcho,
 }
 
 impl PreparedConfig {
@@ -47,6 +49,12 @@ impl PreparedConfig {
             release: (-1.0 / (sr * 0.100)).exp(),
             limiter_release: (-1.0 / (sr * 0.050)).exp(),
             bass: PreparedBass::new(config.virtual_bass_amount, config.virtual_bass_hz, sr),
+            echo: PreparedEcho::new(
+                config.echo_mix,
+                config.echo_time_ms,
+                config.echo_feedback,
+                sr,
+            ),
         }
     }
 }
@@ -100,6 +108,7 @@ pub struct Dsp {
     fade_position: usize,
     fade_length: usize,
     output_dynamics: Dynamics,
+    echo: Echo,
 }
 
 impl Dsp {
@@ -118,6 +127,7 @@ impl Dsp {
             fade_position: 0,
             fade_length: (bounded(sample_rate, 48000.0, 8000.0, 384000.0) * 0.020) as usize,
             output_dynamics: Dynamics::default(),
+            echo: Echo::new(sample_rate),
         }
     }
 
@@ -154,6 +164,11 @@ impl Dsp {
             mixed
         } else {
             a
+        };
+        let output = if self.active.config.bypass {
+            output
+        } else {
+            self.echo.process(output, self.active.config.echo)
         };
         output.map(clean)
     }

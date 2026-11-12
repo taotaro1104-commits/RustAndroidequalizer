@@ -188,4 +188,10 @@
     <string name="ui_preset31_bass_description">Strongly lift sub-bass to low range, plus bass enhancement</string>
     <string name="ui_preset31_megabass">Mega Bass (31-band)</string>
     <string name="ui_preset31_megabass_description">Maximum bass: EQ plus 150% bass enhancement</string>
+    <string name="ui_echo_heading">Add an echo</string>
+    <string name="ui_echo">Echo</string>
+    <string name="ui_echo_hint">Repeat the sound after a short delay. Applies to playback inside this app.</string>
+    <string name="ui_echo_mix">Echo level</string>
+    <string name="ui_echo_time">Echo delay</string>
+    <string name="ui_echo_feedback">Repeats (feedback)</string>
 </resources>

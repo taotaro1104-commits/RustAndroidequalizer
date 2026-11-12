@@ -22,12 +22,17 @@ data class EqConfig(
     val crossfeed: Float = .25f,
     val virtualBassAmount: Float = 0f,
     val virtualBassHz: Float = 110f,
+    /** Echo wet level 0..1 (0 = off), delay in ms and feedback; mirrors dsp-core Echo. */
+    val echoMix: Float = 0f,
+    val echoTimeMs: Float = 300f,
+    val echoFeedback: Float = .35f,
 ) {
-    fun packed(): FloatArray = FloatArray(104).also { v ->
+    fun packed(): FloatArray = FloatArray(107).also { v ->
         v[0] = preamp; v[1] = if (bypass) 1f else 0f; v[2] = bands.size.toFloat()
         v[3] = if (compressor) 1f else 0f; v[4] = threshold; v[5] = ratio
         v[6] = spatial.toFloat(); v[7] = width; v[8] = crossfeed
         v[102] = virtualBassAmount; v[103] = virtualBassHz
+        v[104] = echoMix; v[105] = echoTimeMs; v[106] = echoFeedback
         bands.forEachIndexed { i, b -> v[9+i*3] = b.hz; v[10+i*3] = b.db; v[11+i*3] = b.q }
     }
 
@@ -36,12 +41,16 @@ data class EqConfig(
         put("compressor", compressor); put("threshold", threshold); put("ratio", ratio)
         put("spatial", spatial); put("width", width); put("crossfeed", crossfeed)
         put("virtualBassAmount", virtualBassAmount); put("virtualBassHz", virtualBassHz)
+        put("echoMix", echoMix); put("echoTimeMs", echoTimeMs); put("echoFeedback", echoFeedback)
         put("bands", JSONArray().apply { bands.forEach { put(JSONArray(listOf(it.hz, it.db, it.q))) } })
     }.toString()
 
     companion object {
         /** Bass strength upper bound (200%); mirrors dsp-core MAX_BASS_AMOUNT. */
         const val MAX_BASS_AMOUNT = 2f
+        const val MIN_ECHO_MS = 20f
+        const val MAX_ECHO_MS = 1000f
+        const val MAX_ECHO_FEEDBACK = .85f
 
         fun defaultBands(count: Int): List<EqBand> {
             require(count in 1..31)
@@ -69,6 +78,9 @@ data class EqConfig(
                 width = finite(j.optDouble("width", 1.3), 0f, 2f), crossfeed = finite(j.optDouble("crossfeed", .25), 0f, .5f),
                 virtualBassAmount = finite(j.optDouble("virtualBassAmount", 0.0), 0f, MAX_BASS_AMOUNT),
                 virtualBassHz = finite(j.optDouble("virtualBassHz", 110.0), 60f, 180f),
+                echoMix = finite(j.optDouble("echoMix", 0.0), 0f, 1f),
+                echoTimeMs = finite(j.optDouble("echoTimeMs", 300.0), MIN_ECHO_MS, MAX_ECHO_MS),
+                echoFeedback = finite(j.optDouble("echoFeedback", .35), 0f, MAX_ECHO_FEEDBACK),
             )
         }
 

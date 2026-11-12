@@ -62,7 +62,8 @@ pub unsafe extern "C" fn eq_process(handle: *mut EqHandle, output: *mut f32, fra
 /// # Safety
 /// Handle must be live. values points to count readable floats for this call.
 /// Prefix: 9 scalars + 31 (Hz, dB, Q) triples. Optional final two scalars
-/// are virtual-bass amount and extraction Hz. Legacy 102-float callers disable it.
+/// are virtual-bass amount and extraction Hz; three more (107 total) are echo mix, time ms and feedback.
+/// Legacy 102/104-float callers leave the missing effects off.
 #[no_mangle]
 pub unsafe extern "C" fn eq_configure(
     handle: *mut EqHandle,
@@ -71,7 +72,12 @@ pub unsafe extern "C" fn eq_configure(
 ) -> bool {
     if handle.is_null()
         || values.is_null()
-        || ![(9 + MAX_BANDS * 3) as u32, (11 + MAX_BANDS * 3) as u32].contains(&count)
+        || ![
+            (9 + MAX_BANDS * 3) as u32,
+            (11 + MAX_BANDS * 3) as u32,
+            (14 + MAX_BANDS * 3) as u32,
+        ]
+        .contains(&count)
     {
         return false;
     }
@@ -92,6 +98,9 @@ pub unsafe extern "C" fn eq_configure(
         crossfeed: v[8],
         virtual_bass_amount: v.get(102).copied().unwrap_or(0.0),
         virtual_bass_hz: v.get(103).copied().unwrap_or(110.0),
+        echo_mix: v.get(104).copied().unwrap_or(0.0),
+        echo_time_ms: v.get(105).copied().unwrap_or(300.0),
+        echo_feedback: v.get(106).copied().unwrap_or(0.35),
         bands: std::array::from_fn(|i| Band {
             frequency: v[9 + i * 3],
             gain_db: v[10 + i * 3],

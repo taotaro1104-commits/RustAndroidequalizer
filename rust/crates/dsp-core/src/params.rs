@@ -28,6 +28,10 @@ pub struct Config {
     pub crossfeed: f32,
     pub virtual_bass_amount: f32,
     pub virtual_bass_hz: f32,
+    /// Echo wet level 0..1 (0 = off), delay time in ms, feedback 0..0.85.
+    pub echo_mix: f32,
+    pub echo_time_ms: f32,
+    pub echo_feedback: f32,
 }
 
 impl Default for Config {
@@ -49,6 +53,9 @@ impl Default for Config {
             crossfeed: 0.25,
             virtual_bass_amount: 0.0,
             virtual_bass_hz: 110.0,
+            echo_mix: 0.0,
+            echo_time_ms: 300.0,
+            echo_feedback: 0.35,
         }
     }
 }

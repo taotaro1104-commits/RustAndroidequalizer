@@ -78,6 +78,20 @@ class NativePlaybackTest {
         assertTrue(nativeEngine.configure(strong.packed()))
     }
 
+    @Test fun echoSettingsRoundTripAreValidatedAndAcceptedByNativeEngine() {
+        val echo = EqConfig(echoMix = .6f, echoTimeMs = 450f, echoFeedback = .5f)
+        assertEquals(107, echo.packed().size)
+        assertEquals(echo, EqConfig.fromJson(echo.toJson()))
+        assertTrue(nativeEngine.configure(echo.packed()))
+        assertTrue(nativeEngine.configure(echo.packed().copyOf(104)))
+        assertTrue(nativeEngine.configure(echo.packed().copyOf(102)))
+        assertFalse(nativeEngine.configure(FloatArray(105)))
+        val base = org.json.JSONObject(echo.toJson())
+        assertEquals(0f, EqConfig.fromJson(org.json.JSONObject(base.toString()).apply { remove("echoMix") }.toString()).echoMix, 0f)
+        for ((key, bad) in listOf("echoMix" to 1.5, "echoTimeMs" to 5.0, "echoTimeMs" to 2000.0, "echoFeedback" to .95))
+            assertTrue(runCatching { EqConfig.fromJson(org.json.JSONObject(base.toString()).put(key, bad).toString()) }.isFailure)
+    }
+
     @Test fun demoUsesNativeCallbackAndPausePreservesPosition() {
         assertTrue(nativeEngine.configure(EqConfig().packed()))
         assertEquals("", nativeEngine.load(null))
@@ -112,7 +126,7 @@ class NativePlaybackTest {
         assertEquals(2, config.bands.size)
         assertEquals(-5.5f, config.preamp, 0f)
         assertEquals(config, EqConfig.fromJson(config.toJson()))
-        assertEquals(104, config.packed().size)
+        assertEquals(107, config.packed().size)
         val single = EqConfig.fromAutoEq("Filter 1: ON PK Fc 100 Hz Gain -3 dB Q 1")
         val reset = single.copy(bands = EqConfig.defaultBands(single.bands.size))
         assertTrue(reset.bands.single().hz.isFinite())
